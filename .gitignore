@@ -8,6 +8,13 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+
+# Next.js
+.next
+next-env.d.ts
+*.tsbuildinfo
+
+# Legacy build output
 dist
 dist-ssr
 *.local

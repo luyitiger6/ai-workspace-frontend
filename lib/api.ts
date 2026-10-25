@@ -1,7 +1,6 @@
 /**
  * 后端 Todo API 的 fetch 封装。
- * 开发环境经 vite server.proxy 转发到 http://localhost:8989，
- * 生产环境由部署方将 /api 指向后端服务。
+ * 浏览器只请求同源的 /api/todos，由 app/api/[...path]/route.ts 代理到后端。
  */
 export interface Todo {
   id: number
