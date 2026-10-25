@@ -1,0 +1,55 @@
+.placeholder {
+  display: inline-block;
+  width: 96px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(22, 35, 31, 0.06);
+}
+
+.login {
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--wc-green);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.login:hover {
+  background: var(--wc-green-dark);
+}
+
+.user {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.role {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--wc-accent-soft);
+  color: #7d3319;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.logout {
+  padding: 6px 12px;
+  border: 1px solid var(--wc-line);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.logout:hover {
+  border-color: var(--wc-green);
+  color: var(--wc-green);
+}

@@ -1,87 +1,225 @@
-/* Todo 应用极简样式 */
+/* Wanderchain 设计令牌与基础排版：各单元只在自己的 CSS Module 里做局部布局。 */
+
 :root {
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  color: #1f2328;
-  background-color: #f6f8fa;
+  --wc-sand: #f6f1e7;
+  --wc-sand-deep: #ece4d5;
+  --wc-card: #fffdf8;
+  --wc-ink: #16231f;
+  --wc-ink-soft: #34463f;
+  --wc-muted: #5c6b66;
+  --wc-line: #e4dbc9;
+  --wc-green: #0f5c4e;
+  --wc-green-dark: #0a4038;
+  --wc-green-soft: #e3eee9;
+  --wc-accent: #b8482a;
+  --wc-accent-soft: #f6e2d8;
+  --wc-radius-sm: 10px;
+  --wc-radius-md: 16px;
+  --wc-radius-lg: 24px;
+  --wc-shadow: 0 24px 60px -42px rgba(22, 35, 31, 0.55);
+  --wc-font-display: "Iowan Old Style", "Palatino Linotype", "Songti SC", "Noto Serif SC",
+    Georgia, serif;
+  --wc-font-sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei",
+    sans-serif;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
-}
-
-.todo-app {
-  width: 100%;
-  max-width: 480px;
-  padding: 32px 16px;
-}
-
-h1 {
-  font-size: 24px;
-  margin: 0 0 16px;
-}
-
-.todo-form {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.todo-form input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-button {
-  padding: 8px 16px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  background-color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #f3f4f6;
-}
-
-.todo-list {
-  list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.todo-list li {
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(1000px 520px at 12% -8%, #fdf4e4 0%, rgba(253, 244, 228, 0) 62%),
+    radial-gradient(900px 620px at 100% 0%, #e8efe9 0%, rgba(232, 239, 233, 0) 55%),
+    var(--wc-sand);
+  color: var(--wc-ink);
+  font-family: var(--wc-font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--wc-font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--wc-green);
+  outline-offset: 3px;
+}
+
+.wc-container {
+  width: min(1120px, 100% - 40px);
+  margin-inline: auto;
+}
+
+.wc-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.wc-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 50;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--wc-card);
+  box-shadow: var(--wc-shadow);
+  font-weight: 600;
+}
+
+.wc-skip-link:focus {
+  left: 16px;
+  top: 16px;
+}
+
+.wc-section-head {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.wc-eyebrow {
   margin-bottom: 8px;
-  background-color: #fff;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-}
-
-.todo-list li.done .title {
-  color: #8c959f;
-  text-decoration: line-through;
-}
-
-.badge {
+  color: var(--wc-accent);
   font-size: 12px;
-  color: #1a7f37;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
-.error {
-  color: #cf222e;
+.wc-section-title {
+  font-size: clamp(24px, 3vw, 32px);
 }
 
-.hint {
-  color: #8c959f;
+.wc-section-note {
+  max-width: 32ch;
+  color: var(--wc-muted);
+  font-size: 14px;
+  text-align: right;
+}
+
+.wc-card {
+  background: var(--wc-card);
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-lg);
+  box-shadow: var(--wc-shadow);
+}
+
+.wc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.wc-button:hover {
+  transform: translateY(-1px);
+}
+
+.wc-button--primary {
+  background: var(--wc-green);
+  color: #fff;
+}
+
+.wc-button--primary:hover {
+  background: var(--wc-green-dark);
+}
+
+.wc-button--ghost {
+  background: transparent;
+  border-color: var(--wc-line);
+  color: var(--wc-ink);
+}
+
+.wc-button--ghost:hover {
+  border-color: var(--wc-green);
+  color: var(--wc-green);
+}
+
+.wc-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .wc-container {
+    width: min(1120px, 100% - 32px);
+  }
+
+  .wc-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .wc-section-note {
+    text-align: left;
+  }
 }

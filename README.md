@@ -1,6 +1,6 @@
 # 前端（Next.js）
 
-Spring Boot Todo API 的前端工程：Next.js 16 App Router + React 19 + TypeScript。
+wanderchain 的前端工程：Next.js 16 App Router + React 19 + TypeScript。首页内容由本地 Mock 契约提供，真实 API 接入时只替换仓储实现。
 
 ## 环境要求
 
@@ -22,12 +22,20 @@ Spring Boot Todo API 的前端工程：Next.js 16 App Router + React 19 + TypeSc
 ```
 frontend/
 ├── app/                        路由与页面
-│   ├── layout.tsx              根布局（语言、标题、全局样式）
-│   ├── page.tsx                首页
-│   ├── globals.css             全局样式
+│   ├── layout.tsx              根布局（语言、元信息、认证与 AI 助手 Provider）
+│   ├── page.tsx                首页（城市筛选 + 五个区块）
+│   ├── community/              旅游社区占位页
+│   ├── attractions/            景点攻略占位页
+│   ├── login/ register/        Mock 登录与注册
+│   ├── globals.css             设计令牌与基础排版
 │   └── api/[...path]/route.ts  同源 API 代理
-├── components/                 客户端组件
-├── lib/                        后端 API 封装
+├── components/
+│   ├── home/                   导航、城市入口、AI 助手与三类内容区块
+│   ├── auth/                   Mock 认证（Provider、表单、账号菜单）
+│   └── site/                   页头、页脚与占位页
+├── lib/
+│   ├── home/                   类型契约、城市白名单、Mock 数据与仓储
+│   └── auth/                   Mock 注册、登录与会话
 ├── public/                     静态资源
 ├── next.config.ts              Next.js 配置（standalone 产物）
 ├── vitest.config.ts            测试配置
@@ -53,10 +61,10 @@ frontend/
 在 `frontend/` 目录下构建与运行：
 
 ```powershell
-docker build -t todo-frontend .
-docker run -d --name todo-frontend -p 3000:3000 `
+docker build -t wanderchain-frontend .
+docker run -d --name wanderchain-frontend -p 3000:3000 `
   -e BACKEND_URL=http://host.docker.internal:8989 `
-  todo-frontend
+  wanderchain-frontend
 ```
 
 - 多阶段构建（deps → builder → runner），运行阶段以非 root 用户 `nextjs` 执行 `node server.js`，容器内监听 `3000`（`EXPOSE 3000`）
@@ -65,4 +73,4 @@ docker run -d --name todo-frontend -p 3000:3000 `
 
 ## 测试
 
-组件与代理测试均不依赖后端进程：组件测试 mock `lib/api`，代理测试 mock 全局 `fetch`。
+组件与代理测试均不依赖后端进程：内容区块测试使用本地 Mock 仓储，认证测试使用 localStorage，代理测试 mock 全局 `fetch`。

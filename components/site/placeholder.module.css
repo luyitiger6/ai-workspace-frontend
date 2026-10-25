@@ -1,0 +1,51 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(640px, 100%);
+  padding: 44px 40px;
+  border: 1px solid var(--wc-line);
+  border-radius: 28px;
+  background: var(--wc-card);
+  box-shadow: 0 40px 90px -60px rgba(22, 35, 31, 0.7);
+}
+
+.eyebrow {
+  color: var(--wc-accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(28px, 4vw, 40px);
+}
+
+.description {
+  color: var(--wc-ink-soft);
+  font-size: 16px;
+}
+
+.note {
+  color: var(--wc-muted);
+  font-size: 14px;
+}
+
+.actions {
+  margin-top: 10px;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 32px 24px;
+  }
+}

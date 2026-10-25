@@ -1,8 +1,15 @@
+import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // 与 tsconfig 的 @/* 别名对齐，测试与构建解析同一套路径
+    alias: {
+      '@': fileURLToPath(new URL('.', import.meta.url)),
+    },
+  },
   test: {
     // 组件测试依赖 DOM，统一使用 jsdom 环境；代理测试用文件内注释切到 node 环境
     environment: 'jsdom',

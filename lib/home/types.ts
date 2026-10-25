@@ -1,0 +1,54 @@
+/** 首页共享契约：未来真实 API 的响应形状必须与此一致，切换数据源时只替换仓储实现。 */
+
+export type CitySlug =
+  | 'all'
+  | 'beijing'
+  | 'shanghai'
+  | 'guangzhou'
+  | 'chengdu'
+  | 'xian'
+  | 'hangzhou'
+  | 'sanya'
+
+export type ContentStatus = 'published' | 'draft' | 'removed'
+
+export interface EditorPick {
+  id: number
+  title: string
+  summary: string
+  city: CitySlug
+  coverUrl: string
+  editor: string
+  sortOrder: number
+}
+
+export interface Post {
+  id: number
+  title: string
+  author: string
+  city: CitySlug
+  status: ContentStatus
+  commentCount: number
+  viewCount: number
+  publishedAt: string
+}
+
+export interface Attraction {
+  id: number
+  name: string
+  city: CitySlug
+  coverUrl: string
+  rating: number
+  viewCount: number
+  status: ContentStatus
+  publishedAt: string
+}
+
+export interface ListQuery {
+  city: CitySlug
+}
+
+export interface ListResult<T> {
+  items: T[]
+  total: number
+}

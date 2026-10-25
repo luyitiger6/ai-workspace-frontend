@@ -1,0 +1,49 @@
+.section {
+  padding-block: 8px 0;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  padding: 10px 20px;
+  border: 1px solid var(--wc-line);
+  border-radius: 999px;
+  background: var(--wc-card);
+  color: var(--wc-ink-soft);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--wc-green);
+  color: var(--wc-green);
+}
+
+.active {
+  border-color: var(--wc-green);
+  background: var(--wc-green);
+  color: #fff;
+}
+
+.active:hover {
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .chip {
+    padding: 9px 16px;
+    font-size: 14px;
+  }
+}

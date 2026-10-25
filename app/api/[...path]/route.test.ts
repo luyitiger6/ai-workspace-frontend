@@ -11,8 +11,8 @@ function jsonResponse(body: unknown, status = 200): Response {
   })
 }
 
-function todosContext() {
-  return { params: Promise.resolve({ path: ['todos'] }) }
+function samplesContext() {
+  return { params: Promise.resolve({ path: ['samples'] }) }
 }
 
 describe('API 代理', () => {
@@ -31,13 +31,13 @@ describe('API 代理', () => {
     fetchMock.mockResolvedValue(jsonResponse([]))
 
     const response = await GET(
-      new Request('http://localhost:3000/api/todos?page=1'),
-      todosContext(),
+      new Request('http://localhost:3000/api/samples?page=1'),
+      samplesContext()
     )
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [target, init] = fetchMock.mock.calls[0]
-    expect(target).toBe('http://localhost:8989/api/todos?page=1')
+    expect(target).toBe('http://localhost:8989/api/samples?page=1')
     expect(init.method).toBe('GET')
     expect(init.cache).toBe('no-store')
     expect(response.status).toBe(200)
@@ -48,31 +48,31 @@ describe('API 代理', () => {
     fetchMock.mockResolvedValue(jsonResponse([]))
 
     process.env.BACKEND_URL = 'http://backend-a:9000'
-    await GET(new Request('http://localhost:3000/api/todos'), todosContext())
-    expect(fetchMock.mock.calls[0][0]).toBe('http://backend-a:9000/api/todos')
+    await GET(new Request('http://localhost:3000/api/samples'), samplesContext())
+    expect(fetchMock.mock.calls[0][0]).toBe('http://backend-a:9000/api/samples')
 
     process.env.BACKEND_URL = 'http://backend-b:9001/'
-    await GET(new Request('http://localhost:3000/api/todos'), todosContext())
-    expect(fetchMock.mock.calls[1][0]).toBe('http://backend-b:9001/api/todos')
+    await GET(new Request('http://localhost:3000/api/samples'), samplesContext())
+    expect(fetchMock.mock.calls[1][0]).toBe('http://backend-b:9001/api/samples')
   })
 
   it('透传 POST 的方法、请求体、content-type 与响应状态', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ id: 3, title: '新任务', done: false }, 201))
+    fetchMock.mockResolvedValue(jsonResponse({ id: 3, name: '示例条目' }, 201))
 
-    const request = new Request('http://localhost:3000/api/todos', {
+    const request = new Request('http://localhost:3000/api/samples', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title: '新任务' }),
+      body: JSON.stringify({ name: '示例条目' }),
     })
-    const response = await POST(request, todosContext())
+    const response = await POST(request, samplesContext())
 
     const [target, init] = fetchMock.mock.calls[0]
-    expect(target).toBe('http://localhost:8989/api/todos')
+    expect(target).toBe('http://localhost:8989/api/samples')
     expect(init.method).toBe('POST')
     expect(init.headers.get('content-type')).toBe('application/json')
-    expect(new TextDecoder().decode(init.body)).toBe('{"title":"新任务"}')
+    expect(new TextDecoder().decode(init.body)).toBe('{"name":"示例条目"}')
     expect(response.status).toBe(201)
-    expect(await response.json()).toEqual({ id: 3, title: '新任务', done: false })
+    expect(await response.json()).toEqual({ id: 3, name: '示例条目' })
   })
 
   it('透传上游非 2xx 状态码与响应体', async () => {
@@ -81,8 +81,8 @@ describe('API 代理', () => {
     )
 
     const response = await GET(
-      new Request('http://localhost:3000/api/todos/999'),
-      { params: Promise.resolve({ path: ['todos', '999'] }) },
+      new Request('http://localhost:3000/api/samples/999'),
+      { params: Promise.resolve({ path: ['samples', '999'] }) }
     )
 
     expect(response.status).toBe(404)
@@ -93,7 +93,7 @@ describe('API 代理', () => {
   it('后端不可达时返回 502', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'))
 
-    const response = await GET(new Request('http://localhost:3000/api/todos'), todosContext())
+    const response = await GET(new Request('http://localhost:3000/api/samples'), samplesContext())
 
     expect(response.status).toBe(502)
     expect(await response.json()).toEqual({ error: '后端服务不可达' })

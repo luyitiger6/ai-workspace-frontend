@@ -1,0 +1,162 @@
+.headerTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid var(--wc-line);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.headerTrigger:hover {
+  border-color: var(--wc-green);
+  color: var(--wc-green);
+}
+
+.floating {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--wc-green);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 18px 32px -16px rgba(10, 64, 56, 0.7);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.floating:hover {
+  transform: translateY(-2px);
+  background: var(--wc-green-dark);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 24px;
+  background: rgba(18, 30, 26, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.panel {
+  width: min(420px, 100%);
+  padding: 26px 26px 28px;
+  border-radius: var(--wc-radius-lg);
+  background: var(--wc-card);
+  box-shadow: 0 40px 80px -40px rgba(10, 30, 24, 0.8);
+  animation: panelIn 0.22s ease-out;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--wc-accent-soft);
+  color: #7d3319;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.closeButton {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--wc-line);
+  border-radius: 50%;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  border-color: var(--wc-green);
+  color: var(--wc-green);
+}
+
+.panelTitle {
+  font-size: 26px;
+}
+
+.panelText {
+  margin-top: 10px;
+  color: var(--wc-ink-soft);
+  font-size: 15px;
+}
+
+.capabilities {
+  margin: 18px 0;
+  padding: 16px 18px;
+  border-radius: var(--wc-radius-md);
+  background: var(--wc-green-soft);
+  list-style: none;
+  color: var(--wc-ink-soft);
+  font-size: 14px;
+}
+
+.capabilities li + li {
+  margin-top: 8px;
+}
+
+.capabilities li::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--wc-green);
+  font-weight: 700;
+}
+
+.note {
+  margin-bottom: 18px;
+  color: var(--wc-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    padding: 12px;
+  }
+
+  .floating {
+    right: 16px;
+    bottom: 16px;
+    padding: 12px 16px;
+  }
+
+  .floatingText {
+    display: none;
+  }
+}
