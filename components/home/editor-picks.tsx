@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 import { cityName } from '@/lib/home/cities'
 import { mockRepository } from '@/lib/home/repository'
 import type { CitySlug } from '@/lib/home/types'
@@ -35,13 +37,15 @@ export function EditorPicks({ city }: { city: CitySlug }) {
           <ul className={styles.grid}>
             {state.items.map((pick) => (
               <li key={pick.id} className={styles.card}>
-                <img
+                <Image
                   className={styles.cover}
                   src={pick.coverUrl}
                   alt={`${pick.title}封面`}
                   width={900}
                   height={675}
+                  sizes="(max-width: 640px) calc(100vw - 64px), (max-width: 900px) calc(50vw - 50px), (min-width: 1160px) 347px, calc(33.33vw - 40px)"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className={styles.body}>
                   <span className={styles.city}>

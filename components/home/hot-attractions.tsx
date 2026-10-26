@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 import { cityName } from '@/lib/home/cities'
 import { formatCount } from '@/lib/home/format'
 import { mockRepository } from '@/lib/home/repository'
@@ -40,13 +42,15 @@ export function HotAttractions({ city }: { city: CitySlug }) {
           <ul className={styles.grid}>
             {state.items.map((item) => (
               <li key={item.id} className={styles.card}>
-                <img
+                <Image
                   className={styles.cover}
                   src={item.coverUrl}
                   alt={`${item.name}封面`}
                   width={600}
                   height={600}
+                  sizes="(max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div className={styles.body}>
                   <h3 className={styles.name}>{item.name}</h3>

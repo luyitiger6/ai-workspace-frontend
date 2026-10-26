@@ -19,6 +19,29 @@ describe('编辑推荐区块', () => {
     expect(items[2]).toHaveTextContent('人民公园的一杯盖碗茶')
   })
 
+  it('封面图按响应式档位出图并延迟加载', async () => {
+    render(<EditorPicks city="all" />)
+
+    const covers = await screen.findAllByRole('img', { name: /封面$/ })
+
+    expect(covers).toHaveLength(6)
+
+    for (const cover of covers) {
+      const srcset = cover.getAttribute('srcset') ?? ''
+
+      // jsdom 里 next/image 不加载 next.config.ts 的 images 配置，走的是默认 loader，
+      // 因此这里只验证属性产出；档位改写规则由 lib/image-loader.test.ts 覆盖，
+      // 自定义 loader 的实际接入由浏览器实测确认。
+      expect(srcset).toContain('images.unsplash.com')
+      expect(srcset.split(',').length).toBeGreaterThan(1)
+      expect(cover.getAttribute('sizes')).toBe(
+        '(max-width: 640px) calc(100vw - 64px), (max-width: 900px) calc(50vw - 50px), (min-width: 1160px) 347px, calc(33.33vw - 40px)',
+      )
+      expect(cover).toHaveAttribute('loading', 'lazy')
+      expect(cover).toHaveAttribute('decoding', 'async')
+    }
+  })
+
   it('选中城市时只展示该城市与全城通用卡片', async () => {
     render(<EditorPicks city="beijing" />)
 
