@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { AiAssistantProvider } from '@/components/home/ai-assistant'
@@ -59,6 +59,21 @@ describe('wanderchain 首页', () => {
 
     expect(screen.getByRole('button', { name: '全部' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: '北京' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('城市切换不影响主视觉', async () => {
+    const readOverview = () =>
+      within(screen.getByRole('region', { name: /把想去的地方/ }))
+        .getAllByRole('listitem')
+        .map((item) => item.textContent)
+
+    const { unmount } = await renderHome({ city: 'all' })
+    const baseline = readOverview()
+    unmount()
+
+    await renderHome({ city: 'beijing' })
+
+    expect(readOverview()).toEqual(baseline)
   })
 
   it('单个区块失败不连带其他区块', async () => {
