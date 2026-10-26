@@ -1,6 +1,7 @@
 /**
  * 前端自包含的 Mock 认证：账号与会话只存在浏览器本地，不发起任何网络请求。
- * 这是接口形状的占位实现，真实认证（服务端签发 JWT）需另立项，勿在生产使用。
+ * 这是接口形状的占位实现，真实认证（服务端签发 JWT）需另立项。
+ * 生产构建下注册与登录会被 assertDemoEnvironment 直接拒绝，避免演示代码被当成真认证部署出去。
  */
 
 export type UserRole = 'user' | 'admin'
@@ -130,7 +131,21 @@ function validateCredentials(email: string, password: string): void {
   }
 }
 
+/**
+ * 演示认证禁止进入生产：密码以明文写入 localStorage，令牌不参与签名校验。
+ * 这里不做「前端加密密码」那种自我安慰，而是让误部署在注册/登录这一步立刻暴露，
+ * 而不是静默带病运行。只在函数体内判断，不在模块顶层执行——顶层会在 SSR 预渲染时跑，
+ * 那样会让 next build 直接失败，等于把护栏做成了路障。
+ */
+function assertDemoEnvironment(): void {
+  if (process.env.NODE_ENV === 'production') {
+    throw new AuthError('演示认证已停用：生产环境必须接入服务端签发的真实认证。')
+  }
+}
+
 export async function registerAccount(input: RegisterInput): Promise<Session> {
+  assertDemoEnvironment()
+
   const email = normalizeEmail(input.email)
   const name = input.name.trim()
 
@@ -155,6 +170,8 @@ export async function registerAccount(input: RegisterInput): Promise<Session> {
 }
 
 export async function loginWithPassword(email: string, password: string): Promise<Session> {
+  assertDemoEnvironment()
+
   const normalized = normalizeEmail(email)
   const account = allAccounts().find((item) => item.email === normalized)
 
@@ -165,6 +182,10 @@ export async function loginWithPassword(email: string, password: string): Promis
   return persistSession(toUser(account))
 }
 
+/**
+ * 读取会话不设生产护栏：它在挂载期执行，抛错只会把首屏打崩；
+ * 而新会话只能由注册/登录写入，那两条入口已经拦住了。
+ */
 export function readSession(): Session | null {
   const store = storage()
   const raw = store?.getItem(SESSION_KEY)

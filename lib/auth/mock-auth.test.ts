@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   AuthError,
   loginWithPassword,
@@ -10,6 +10,10 @@ import {
 describe('Mock 认证', () => {
   beforeEach(() => {
     window.localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   it('注册新账号后立即建立会话', async () => {
@@ -73,5 +77,17 @@ describe('Mock 认证', () => {
     await expect(
       registerAccount({ email: 'ok@wanderchain.dev', password: '123', name: '路人' }),
     ).rejects.toThrow('密码至少 6 位')
+  })
+
+  it('生产环境下拒绝注册与登录，演示认证不会静默上线', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+
+    await expect(loginWithPassword('admin@wanderchain.dev', 'admin123')).rejects.toThrow(
+      '演示认证已停用',
+    )
+    await expect(
+      registerAccount({ email: 'new@wanderchain.dev', password: 'secret123', name: '新旅人' }),
+    ).rejects.toThrow('演示认证已停用')
+    expect(readSession()).toBeNull()
   })
 })

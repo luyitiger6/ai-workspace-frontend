@@ -71,6 +71,15 @@ docker run -d --name wanderchain-frontend -p 3000:3000 `
 - `BACKEND_URL` 在 Dockerfile 中有默认值 `http://localhost:8989`，可用 `-e` 覆盖；容器内的 `localhost` 指向容器自身，连宿主机后端请写 `host.docker.internal`
 - 只改后端地址时不必重建镜像，重新创建容器即可
 
+## Mock 认证的边界
+
+`lib/auth/mock-auth.ts` 是**接口形状的占位实现**，不是可用的认证：
+
+- 账号与会话只存在浏览器 `localStorage`，密码以**明文**保存，令牌是 `alg: none` 的假签名，服务端不做任何校验
+- 生产构建（`NODE_ENV=production`）下注册与登录会直接返回错误，避免演示代码被当成真认证部署出去
+- 换成真实认证需要另立项：服务端签发 JWT、`HttpOnly` Cookie、BCrypt 哈希与用户表
+- 不要用「前端加密密码」缓解：密钥与密文在同一次下载里，不构成任何防护
+
 ## 测试
 
 组件与代理测试均不依赖后端进程：内容区块测试使用本地 Mock 仓储，认证测试使用 localStorage，代理测试 mock 全局 `fetch`。

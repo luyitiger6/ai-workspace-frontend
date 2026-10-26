@@ -40,12 +40,14 @@
   margin-top: 4px;
   color: var(--wc-muted);
   font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .views {
   margin-top: 6px;
   color: var(--wc-green);
   font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 
