@@ -118,8 +118,7 @@ button {
 .wc-section-head {
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
   margin-bottom: 24px;
 }
 
@@ -140,7 +139,8 @@ button {
   max-width: 32ch;
   color: var(--wc-muted);
   font-size: 14px;
-  text-align: right;
+  text-align: left;
+  padding-bottom: 4px;
 }
 
 .wc-card {
