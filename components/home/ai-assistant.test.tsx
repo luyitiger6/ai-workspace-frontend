@@ -18,6 +18,7 @@ describe('AI 助手入口', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    document.body.style.overflow = ''
   })
 
   it('顶部入口打开 AI 助手面板', () => {
@@ -77,5 +78,97 @@ describe('AI 助手入口', () => {
     fireEvent.click(screen.getByRole('button', { name: '知道了' }))
 
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  describe('模态约束', () => {
+    it('两个入口打开后焦点都落在关闭按钮上', () => {
+      for (const testId of ['ai-header', 'ai-floating']) {
+        const { unmount } = renderAssistant()
+
+        fireEvent.click(screen.getByTestId(testId))
+
+        expect(screen.getByRole('button', { name: '关闭 AI 助手' })).toHaveFocus()
+        unmount()
+      }
+    })
+
+    it('Tab 在最后一个元素上回到第一个', () => {
+      renderAssistant()
+      fireEvent.click(screen.getByTestId('ai-header'))
+
+      const closeButton = screen.getByRole('button', { name: '关闭 AI 助手' })
+      const confirmButton = screen.getByRole('button', { name: '知道了' })
+
+      confirmButton.focus()
+      expect(confirmButton).toHaveFocus()
+
+      fireEvent.keyDown(document, { key: 'Tab' })
+
+      expect(closeButton).toHaveFocus()
+    })
+
+    it('Shift+Tab 在第一个元素上回到最后一个', () => {
+      renderAssistant()
+      fireEvent.click(screen.getByTestId('ai-header'))
+
+      const closeButton = screen.getByRole('button', { name: '关闭 AI 助手' })
+      const confirmButton = screen.getByRole('button', { name: '知道了' })
+
+      closeButton.focus()
+      expect(closeButton).toHaveFocus()
+
+      fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+
+      expect(confirmButton).toHaveFocus()
+    })
+
+    it('四种关闭方式都把焦点还给触发元素', () => {
+      const closers: Array<[string, () => void]> = [
+        ['关闭按钮', () => fireEvent.click(screen.getByRole('button', { name: '关闭 AI 助手' }))],
+        ['知道了按钮', () => fireEvent.click(screen.getByRole('button', { name: '知道了' }))],
+        ['Esc', () => fireEvent.keyDown(document, { key: 'Escape' })],
+        ['点击遮罩', () => fireEvent.click(screen.getByTestId('ai-overlay'))],
+      ]
+
+      for (const [, closePanel] of closers) {
+        const { unmount } = renderAssistant()
+        const trigger = screen.getByTestId('ai-header')
+
+        trigger.focus()
+        fireEvent.click(trigger)
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+        closePanel()
+
+        expect(trigger).toHaveFocus()
+        unmount()
+      }
+    })
+
+    it('打开期间锁定背景滚动，关闭后恢复原值', () => {
+      document.body.style.overflow = 'scroll'
+
+      renderAssistant()
+      fireEvent.click(screen.getByTestId('ai-header'))
+
+      expect(document.body.style.overflow).toBe('hidden')
+
+      fireEvent.click(screen.getByRole('button', { name: '知道了' }))
+
+      expect(document.body.style.overflow).toBe('scroll')
+    })
+
+    it('面板打开时卸载也恢复背景滚动原值', () => {
+      document.body.style.overflow = 'scroll'
+
+      const { unmount } = renderAssistant()
+      fireEvent.click(screen.getByTestId('ai-header'))
+
+      expect(document.body.style.overflow).toBe('hidden')
+
+      unmount()
+
+      expect(document.body.style.overflow).toBe('scroll')
+    })
   })
 })

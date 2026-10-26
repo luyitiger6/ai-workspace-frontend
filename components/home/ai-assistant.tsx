@@ -38,11 +38,27 @@ function SparkIcon() {
   )
 }
 
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
+/** 运行期查询而非缓存：面板内容会随对话能力上线而新增控件，写死 ref 列表会静默漏掉新元素。 */
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+}
+
 /** AI 助手为纯前端占位：只有打开/关闭，不发起任何网络请求。 */
 export function AiAssistantProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
+  // 焦点移入、焦点归还与背景滚动锁都由规格约束（见「AI 助手面板的模态约束」），不是可随手删掉的实现细节。
   const restoreFocusRef = useRef<HTMLElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const panelRef = useRef<HTMLElement | null>(null)
 
   const open = useCallback(() => {
     const active = typeof document === 'undefined' ? null : document.activeElement
@@ -62,16 +78,54 @@ export function AiAssistantProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // 保存原值并原样恢复：原值是空字符串时也要恢复成空字符串，不能写成 'auto' 覆盖调用方的声明。
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     closeButtonRef.current?.focus()
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         close()
+        return
+      }
+
+      if (event.key !== 'Tab') {
+        return
+      }
+
+      const panel = panelRef.current
+      if (!panel) {
+        return
+      }
+
+      const focusable = getFocusableElements(panel)
+      if (focusable.length === 0) {
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+
+      if (event.shiftKey) {
+        if (active === first || !panel.contains(active)) {
+          event.preventDefault()
+          last.focus()
+        }
+        return
+      }
+
+      if (active === last || !panel.contains(active)) {
+        event.preventDefault()
+        first.focus()
       }
     }
 
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
   }, [isOpen, close])
 
   return (
@@ -80,6 +134,7 @@ export function AiAssistantProvider({ children }: { children: ReactNode }) {
       {isOpen ? (
         <div className={styles.overlay} data-testid="ai-overlay" onClick={close}>
           <section
+            ref={panelRef}
             className={styles.panel}
             role="dialog"
             aria-modal="true"
