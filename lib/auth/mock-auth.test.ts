@@ -14,6 +14,7 @@ describe('Mock 认证', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
   })
 
   it('注册新账号后立即建立会话', async () => {
@@ -68,6 +69,35 @@ describe('Mock 认证', () => {
     logoutSession()
 
     expect(readSession()).toBeNull()
+  })
+
+  it('会话过期时被删除并返回 null', () => {
+    window.localStorage.setItem(
+      'wanderchain.session',
+      JSON.stringify({
+        token: 'expired.token.sig',
+        user: { id: 'u1', email: 'a@b.co', name: 'A', role: 'user' },
+        expiresAt: Date.now() - 1000,
+      }),
+    )
+
+    expect(readSession()).toBeNull()
+    expect(window.localStorage.getItem('wanderchain.session')).toBeNull()
+  })
+
+  it('损坏的会话被删除且不抛错', () => {
+    window.localStorage.setItem('wanderchain.session', '{not-json')
+
+    expect(() => readSession()).not.toThrow()
+    expect(readSession()).toBeNull()
+    expect(window.localStorage.getItem('wanderchain.session')).toBeNull()
+  })
+
+  it('没有 window 时存储访问返回 null', () => {
+    vi.stubGlobal('window', undefined)
+
+    expect(readSession()).toBeNull()
+    expect(() => logoutSession()).not.toThrow()
   })
 
   it('非法邮箱与过短密码被输入校验拦截', async () => {

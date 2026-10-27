@@ -63,6 +63,18 @@ describe('wanderchain 首页', () => {
     expect(screen.getByRole('button', { name: 'Beijing' })).toHaveAttribute('aria-pressed', 'false')
   })
 
+  it('searchParams 缺失时仍渲染并回落全部城市', async () => {
+    const ui = await HomePage({ searchParams: Promise.resolve(undefined!) })
+    render(
+      <AuthProvider>
+        <AiAssistantProvider>{ui}</AiAssistantProvider>
+      </AuthProvider>,
+    )
+
+    expect(screen.getByRole('button', { name: 'All cities' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('heading', { name: 'Popular attractions' })).toBeInTheDocument()
+  })
+
   it('城市切换不影响主视觉', async () => {
     const readHero = () => {
       const region = screen.getByRole('region', { name: /Turn a place you want to see/ })
@@ -96,5 +108,48 @@ describe('wanderchain 首页', () => {
 
     expect(HAN.test(container.textContent ?? '')).toBe(false)
     expect(HAN.test(document.body.textContent ?? '')).toBe(false)
+  })
+
+  it('重复 city 参数取首值', async () => {
+    const ui = await HomePage({ searchParams: Promise.resolve({ city: ['beijing', 'shanghai'] }) })
+    render(
+      <AuthProvider>
+        <AiAssistantProvider>{ui}</AiAssistantProvider>
+      </AuthProvider>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Beijing' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Shanghai' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('city 变化触发三个内容区块重新取数', async () => {
+    const picksSpy = vi.spyOn(mockRepository, 'listEditorPicks')
+    const postsSpy = vi.spyOn(mockRepository, 'listHotPosts')
+    const attractionsSpy = vi.spyOn(mockRepository, 'listHotAttractions')
+
+    const first = await HomePage({ searchParams: Promise.resolve({ city: 'all' }) })
+    const { rerender } = render(
+      <AuthProvider>
+        <AiAssistantProvider>{first}</AiAssistantProvider>
+      </AuthProvider>,
+    )
+
+    await waitFor(() => expect(picksSpy).toHaveBeenLastCalledWith({ city: 'all' }))
+
+    const second = await HomePage({ searchParams: Promise.resolve({ city: 'beijing' }) })
+    rerender(
+      <AuthProvider>
+        <AiAssistantProvider>{second}</AiAssistantProvider>
+      </AuthProvider>,
+    )
+
+    await waitFor(() => {
+      expect(picksSpy).toHaveBeenLastCalledWith({ city: 'beijing' })
+      expect(postsSpy).toHaveBeenLastCalledWith({ city: 'beijing' })
+      expect(attractionsSpy).toHaveBeenLastCalledWith({ city: 'beijing' })
+    })
   })
 })

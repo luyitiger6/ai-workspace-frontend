@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockRepository } from '@/lib/home/repository'
 import { HotAttractions } from './hot-attractions'
@@ -35,7 +35,7 @@ describe('热门景点区块', () => {
       expect(srcset).toContain('images.unsplash.com')
       expect(srcset.split(',').length).toBeGreaterThan(1)
       expect(cover.getAttribute('sizes')).toBe(
-        '(max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)',
+        '(max-width: 480px) calc(100vw - 64px), (max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)',
       )
       expect(cover).toHaveAttribute('loading', 'lazy')
       expect(cover).toHaveAttribute('decoding', 'async')
@@ -67,5 +67,44 @@ describe('热门景点区块', () => {
     render(<HotAttractions city="all" />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Popular attractions could not load')
+  })
+
+  it('只展示所选城市的景点', async () => {
+    render(<HotAttractions city="beijing" />)
+
+    const items = await screen.findAllByRole('listitem')
+
+    expect(items.length).toBeGreaterThan(0)
+    expect(screen.getByText('The Palace Museum')).toBeInTheDocument()
+    expect(screen.queryByText('The Bund')).not.toBeInTheDocument()
+  })
+
+  it('元信息按城市 · 评分拼接', async () => {
+    render(<HotAttractions city="all" />)
+
+    const items = await screen.findAllByRole('listitem')
+
+    expect(items[0].querySelectorAll('p')[0]).toHaveTextContent('Beijing · Rating 4.8')
+  })
+
+  it('浏览数按千分位格式化', async () => {
+    render(<HotAttractions city="all" />)
+
+    const items = await screen.findAllByRole('listitem')
+
+    expect(items[0].querySelectorAll('p')[1]).toHaveTextContent('32,000 views')
+  })
+
+  it('city 变化触发重新取数', async () => {
+    const spy = vi.spyOn(mockRepository, 'listHotAttractions')
+
+    const { rerender } = render(<HotAttractions city="all" />)
+
+    await screen.findAllByRole('listitem')
+    expect(spy).toHaveBeenLastCalledWith({ city: 'all' })
+
+    rerender(<HotAttractions city="beijing" />)
+
+    await waitFor(() => expect(spy).toHaveBeenLastCalledWith({ city: 'beijing' }))
   })
 })

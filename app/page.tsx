@@ -30,7 +30,8 @@ function toQuery(params: SearchParams): Record<string, string> {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const params = await searchParams
+  // Next 在某些调用下（比如直接以组件方式渲染）可能拿不到 searchParams，缺省按空参数处理。
+  const params = (await searchParams) ?? {}
   const city = parseCity(params.city)
   const query = toQuery(params)
 

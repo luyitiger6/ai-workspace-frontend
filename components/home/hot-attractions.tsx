@@ -49,7 +49,7 @@ export function HotAttractions({ city }: { city: CitySlug }) {
                   alt={`${item.nameEn} cover`}
                   width={600}
                   height={600}
-                  sizes="(max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)"
+                  sizes="(max-width: 480px) calc(100vw - 64px), (max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)"
                   loading="lazy"
                   decoding="async"
                 />

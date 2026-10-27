@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, renderHook, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AiAssistantProvider, AiAssistantTrigger } from './ai-assistant'
+import { AiAssistantProvider, AiAssistantTrigger, useAiAssistant } from './ai-assistant'
 
 function renderAssistant() {
   return render(
@@ -10,6 +10,14 @@ function renderAssistant() {
     </AiAssistantProvider>,
   )
 }
+
+describe('上下文约束', () => {
+  it('Provider 外调用 useAiAssistant 抛出固定英文文案', () => {
+    expect(() => renderHook(() => useAiAssistant())).toThrow(
+      'useAiAssistant must be used inside AiAssistantProvider',
+    )
+  })
+})
 
 describe('AI 助手入口', () => {
   beforeEach(() => {

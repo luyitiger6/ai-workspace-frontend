@@ -37,6 +37,22 @@ describe('城市快速入口', () => {
     expect(replace).toHaveBeenCalledWith('/')
   })
 
+  it('切回 All cities 时删除 city 但保留其他参数', () => {
+    render(<CitySwitcher activeCity="beijing" query={{ city: 'beijing', ref: 'home' }} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'All cities' }))
+
+    expect(replace).toHaveBeenCalledWith('/?ref=home')
+  })
+
+  it('说明文案跟随当前城市', () => {
+    render(<CitySwitcher activeCity="chengdu" query={{ city: 'chengdu' }} />)
+
+    expect(
+      screen.getByText(/Now: Chengdu · Slow down, then slow down more/),
+    ).toBeInTheDocument()
+  })
+
   it('切换城市时保留其他查询参数', () => {
     render(<CitySwitcher activeCity="beijing" query={{ city: 'beijing', ref: 'home' }} />)
 

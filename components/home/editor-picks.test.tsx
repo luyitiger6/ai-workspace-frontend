@@ -1,6 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { EDITOR_PICKS } from '@/lib/home/mock-data'
 import { mockRepository } from '@/lib/home/repository'
+import type { EditorPick, ListResult } from '@/lib/home/types'
 import { EditorPicks } from './editor-picks'
 
 describe('编辑推荐区块', () => {
@@ -67,5 +69,30 @@ describe('编辑推荐区块', () => {
     render(<EditorPicks city="all" />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Editor's picks could not load")
+  })
+
+  it('先发的慢请求后返回时不覆盖新城市结果', async () => {
+    let resolveSlow: (value: ListResult<EditorPick>) => void = () => undefined
+    const slow = new Promise<ListResult<EditorPick>>((resolve) => {
+      resolveSlow = resolve
+    })
+    const spy = vi.spyOn(mockRepository, 'listEditorPicks')
+    spy.mockReturnValueOnce(slow)
+
+    const { rerender } = render(<EditorPicks city="all" />)
+    rerender(<EditorPicks city="beijing" />)
+
+    expect(await screen.findByText('A walk through the Forbidden City at dusk')).toBeInTheDocument()
+
+    const shanghaiPick = EDITOR_PICKS.find(
+      (pick) => pick.titleEn === 'Plane trees and coffee on Wukang Road',
+    )!
+
+    await act(async () => {
+      resolveSlow({ items: [shanghaiPick], total: 1 })
+    })
+
+    expect(screen.queryByText('Plane trees and coffee on Wukang Road')).not.toBeInTheDocument()
+    expect(spy).toHaveBeenCalledTimes(2)
   })
 })
