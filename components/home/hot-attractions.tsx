@@ -15,6 +15,7 @@ export function HotAttractions({ city }: { city: CitySlug }) {
 
   return (
     <section
+      id="hot-attractions"
       className={styles.section}
       data-section="hot-attractions"
       aria-labelledby="hot-attractions-title"

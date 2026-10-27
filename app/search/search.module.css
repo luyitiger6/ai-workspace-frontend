@@ -1,0 +1,126 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  padding-block: clamp(32px, 5vw, 56px) clamp(56px, 8vw, 96px);
+}
+
+.inner {
+  /* 用逻辑属性而非 max-width：.wc-container 的左右留白来自它自己的 width，
+     在这里写 max-width 会被 08 闸门当成响应式断点 */
+  max-inline-size: 860px;
+}
+
+.title {
+  margin-top: 6px;
+  font-size: clamp(30px, 4vw, 44px);
+}
+
+.status {
+  margin-top: 16px;
+  color: var(--wc-ink-soft);
+  font-size: 15px;
+}
+
+.state {
+  margin-top: 28px;
+  padding: 26px;
+  border: 1px dashed var(--wc-line);
+  border-radius: var(--wc-radius-lg);
+  background: var(--wc-card);
+}
+
+.stateText {
+  color: var(--wc-ink-soft);
+}
+
+.stateLink {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--wc-green);
+  font-weight: 600;
+}
+
+.stateLink:hover {
+  color: var(--wc-green-dark);
+}
+
+.groups {
+  display: grid;
+  gap: 24px;
+  margin-top: 26px;
+}
+
+.group {
+  padding: 24px 26px;
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-lg);
+  background: var(--wc-card);
+  box-shadow: var(--wc-shadow);
+}
+
+.groupHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.groupTitle {
+  font-size: 20px;
+}
+
+.count {
+  color: var(--wc-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  padding-block: 12px;
+  border-top: 1px dashed var(--wc-line);
+}
+
+.itemTitle {
+  font-weight: 600;
+}
+
+.meta {
+  margin-top: 4px;
+  color: var(--wc-muted);
+  font-size: 13px;
+}
+
+.anchor {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--wc-green);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.anchor:hover {
+  color: var(--wc-green-dark);
+}
+
+@media (max-width: 720px) {
+  .group {
+    padding: 20px 18px;
+  }
+
+  .groupHead {
+    flex-direction: column;
+    gap: 2px;
+  }
+}

@@ -62,18 +62,21 @@ describe('wanderchain 首页', () => {
   })
 
   it('城市切换不影响主视觉', async () => {
-    const readOverview = () =>
-      within(screen.getByRole('region', { name: /把想去的地方/ }))
-        .getAllByRole('listitem')
-        .map((item) => item.textContent)
+    const readHero = () => {
+      const region = screen.getByRole('region', { name: /把想去的地方/ })
+      return {
+        heading: within(region).getByRole('heading', { level: 1 }).textContent,
+        keyword: (within(region).getByLabelText('搜索城市、帖子或景点') as HTMLInputElement).value,
+      }
+    }
 
     const { unmount } = await renderHome({ city: 'all' })
-    const baseline = readOverview()
+    const baseline = readHero()
     unmount()
 
     await renderHome({ city: 'beijing' })
 
-    expect(readOverview()).toEqual(baseline)
+    expect(readHero()).toEqual(baseline)
   })
 
   it('单个区块失败不连带其他区块', async () => {

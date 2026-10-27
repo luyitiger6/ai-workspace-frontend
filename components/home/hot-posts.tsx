@@ -12,7 +12,12 @@ export function HotPosts({ city }: { city: CitySlug }) {
   const state = useSectionData(() => mockRepository.listHotPosts({ city }), [city])
 
   return (
-    <section className={styles.section} data-section="hot-posts" aria-labelledby="hot-posts-title">
+    <section
+      id="hot-posts"
+      className={styles.section}
+      data-section="hot-posts"
+      aria-labelledby="hot-posts-title"
+    >
       <div className="wc-container">
         <div className="wc-section-head">
           <div>

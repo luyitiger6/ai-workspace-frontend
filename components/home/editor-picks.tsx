@@ -13,7 +13,12 @@ export function EditorPicks({ city }: { city: CitySlug }) {
   const state = useSectionData(() => mockRepository.listEditorPicks({ city }), [city])
 
   return (
-    <section className={styles.section} data-section="editor-picks" aria-labelledby="editor-picks-title">
+    <section
+      id="editor-picks"
+      className={styles.section}
+      data-section="editor-picks"
+      aria-labelledby="editor-picks-title"
+    >
       <div className="wc-container">
         <div className="wc-section-head">
           <div>
