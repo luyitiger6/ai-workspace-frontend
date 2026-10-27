@@ -58,6 +58,20 @@ describe('首页 Mock 仓储', () => {
     expect(items.map((item) => item.name)).not.toContain('未开放的观景台')
   })
 
+  it('热门帖子按城市过滤且 total 只统计匹配项', async () => {
+    const { items, total } = await mockRepository.listHotPosts({ city: 'chengdu' })
+
+    expect(items.map((item) => item.id)).toEqual([3, 10])
+    expect(total).toBe(2)
+  })
+
+  it('目标城市无本城内容时仍返回全城通用卡片', async () => {
+    const { items, total } = await mockRepository.listEditorPicks({ city: 'sanya' })
+
+    expect(items.map((item) => item.id)).toEqual([4])
+    expect(total).toBe(1)
+  })
+
   it('同一查询重复调用返回完全一致的结果', async () => {
     const first = await mockRepository.listHotPosts({ city: 'shanghai' })
     const second = await mockRepository.listHotPosts({ city: 'shanghai' })

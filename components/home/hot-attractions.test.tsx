@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockRepository } from '@/lib/home/repository'
+import type { Attraction, ListResult } from '@/lib/home/types'
 import { HotAttractions } from './hot-attractions'
 
 describe('热门景点区块', () => {
@@ -42,6 +43,24 @@ describe('热门景点区块', () => {
     }
   })
 
+  it('取数期间展示 role="status" 加载提示，完成后消失', async () => {
+    let resolveData: (value: ListResult<Attraction>) => void = () => undefined
+    const pending = new Promise<ListResult<Attraction>>((resolve) => {
+      resolveData = resolve
+    })
+    vi.spyOn(mockRepository, 'listHotAttractions').mockReturnValueOnce(pending)
+
+    render(<HotAttractions city="all" />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Gathering attraction data…')
+
+    await act(async () => {
+      resolveData({ items: [], total: 0 })
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('不展示草稿与已删除景点', async () => {
     render(<HotAttractions city="all" />)
 
@@ -77,6 +96,42 @@ describe('热门景点区块', () => {
     expect(items.length).toBeGreaterThan(0)
     expect(screen.getByText('The Palace Museum')).toBeInTheDocument()
     expect(screen.queryByText('The Bund')).not.toBeInTheDocument()
+  })
+
+  it('先发的慢请求后返回时不覆盖新城市结果', async () => {
+    let resolveSlow: (value: ListResult<Attraction>) => void = () => undefined
+    const slow = new Promise<ListResult<Attraction>>((resolve) => {
+      resolveSlow = resolve
+    })
+    const spy = vi.spyOn(mockRepository, 'listHotAttractions')
+    spy.mockReturnValueOnce(slow)
+
+    const { rerender } = render(<HotAttractions city="all" />)
+    rerender(<HotAttractions city="beijing" />)
+
+    expect(await screen.findByText('The Palace Museum')).toBeInTheDocument()
+
+    const stale: Attraction = {
+      id: 901,
+      name: '旧城市残留景点',
+      nameEn: 'A stale attraction from the previous city',
+      city: 'shanghai',
+      coverUrl: 'https://images.unsplash.com/placeholder',
+      rating: 4.9,
+      viewCount: 1,
+      status: 'published',
+      publishedAt: '2026-10-01T00:00:00+08:00',
+    }
+
+    await act(async () => {
+      resolveSlow({ items: [stale], total: 1 })
+    })
+
+    expect(
+      screen.queryByText('A stale attraction from the previous city'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('The Palace Museum')).toBeInTheDocument()
+    expect(spy).toHaveBeenCalledTimes(2)
   })
 
   it('元信息按城市 · 评分拼接', async () => {

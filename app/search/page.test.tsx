@@ -73,6 +73,17 @@ describe('站内搜索结果页', () => {
     expect(groupHeadings()).toEqual([])
   })
 
+  it('含引号、尖括号与脚本标签的关键词按纯文本回显', async () => {
+    const payload = '<script>alert("x")</script> & <b>bold</b>'
+
+    const { container } = await renderSearch({ q: payload })
+
+    expect(screen.getByText(`Nothing found for “${payload}”.`)).toBeInTheDocument()
+    expect(container.querySelector('script')).toBeNull()
+    expect(container.querySelector('b')).toBeNull()
+    expect(container.textContent).toContain('<script>alert("x")</script>')
+  })
+
   it('每组都带回首页对应区块的锚点', async () => {
     await renderSearch({ q: '成都' })
 

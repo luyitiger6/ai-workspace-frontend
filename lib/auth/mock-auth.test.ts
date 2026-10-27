@@ -54,6 +54,58 @@ describe('Mock 认证', () => {
     expect(session.user.email).toBe('admin@wanderchain.dev')
   })
 
+  it('登录邮箱忽略首尾空格', async () => {
+    const session = await loginWithPassword(' Admin@WanderChain.dev ', 'admin123')
+
+    expect(session.user.email).toBe('admin@wanderchain.dev')
+  })
+
+  it('注册时同一邮箱的不同大小写写法被判为重复', async () => {
+    await expect(
+      registerAccount({
+        email: ' ADMIN@WanderChain.dev ',
+        password: 'secret123',
+        name: 'Impostor',
+      }),
+    ).rejects.toThrow('This email is already registered')
+  })
+
+  it('用户名 trim 后不足 2 个字符时拒绝注册且不写存储', async () => {
+    await expect(
+      registerAccount({ email: 'short@wanderchain.dev', password: 'secret123', name: '  A  ' }),
+    ).rejects.toThrow('Username must be at least 2 characters')
+
+    expect(window.localStorage.getItem('wanderchain.accounts')).toBeNull()
+    expect(window.localStorage.getItem('wanderchain.session')).toBeNull()
+  })
+
+  it('非法邮箱给出精确文案且不写任何存储', async () => {
+    await expect(
+      registerAccount({ email: 'not-an-email', password: 'secret123', name: 'Passerby' }),
+    ).rejects.toThrow('Enter a valid email address')
+
+    expect(window.localStorage.getItem('wanderchain.accounts')).toBeNull()
+    expect(window.localStorage.getItem('wanderchain.session')).toBeNull()
+  })
+
+  it('邮箱不存在与密码错误返回完全相同的文案', async () => {
+    const attempts = [
+      loginWithPassword('nobody@wanderchain.dev', 'secret123'),
+      loginWithPassword('admin@wanderchain.dev', 'wrong-password'),
+    ]
+
+    const messages = await Promise.all(
+      attempts.map((attempt) =>
+        attempt.then(
+          () => 'resolved',
+          (error: unknown) => (error instanceof Error ? error.message : String(error)),
+        ),
+      ),
+    )
+
+    expect(messages).toEqual(['Incorrect email or password', 'Incorrect email or password'])
+  })
+
   it('刷新后仍能读到同一会话', async () => {
     const created = await loginWithPassword('traveler@wanderchain.dev', 'traveler123')
 

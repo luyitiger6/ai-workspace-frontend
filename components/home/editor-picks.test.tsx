@@ -44,6 +44,26 @@ describe('编辑推荐区块', () => {
     }
   })
 
+  it('取数期间展示 role="status" 加载提示，完成后消失', async () => {
+    let resolveData: (value: ListResult<EditorPick>) => void = () => undefined
+    const pending = new Promise<ListResult<EditorPick>>((resolve) => {
+      resolveData = resolve
+    })
+    vi.spyOn(mockRepository, 'listEditorPicks').mockReturnValueOnce(pending)
+
+    render(<EditorPicks city="all" />)
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      "Our editors are picking this week's routes…",
+    )
+
+    await act(async () => {
+      resolveData({ items: [], total: 0 })
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('选中城市时只展示该城市与全城通用卡片', async () => {
     render(<EditorPicks city="beijing" />)
 

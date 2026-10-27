@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { fireEvent, render, renderHook, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AiAssistantProvider, AiAssistantTrigger, useAiAssistant } from './ai-assistant'
@@ -8,6 +9,28 @@ function renderAssistant() {
       <AiAssistantTrigger variant="header" />
       <AiAssistantTrigger variant="floating" />
     </AiAssistantProvider>,
+  )
+}
+
+/** 点击后自行从 DOM 移除的触发器，用于验证焦点归还的容错分支。 */
+function SelfRemovingTrigger() {
+  const { open } = useAiAssistant()
+  const [visible, setVisible] = useState(true)
+
+  if (!visible) {
+    return null
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        open()
+        setVisible(false)
+      }}
+    >
+      Temporary trigger
+    </button>
   )
 }
 
@@ -76,6 +99,118 @@ describe('AI 助手入口', () => {
     fireEvent.click(screen.getByTestId('ai-overlay'))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('初始渲染不挂载面板且两个触发器都标记为收起', () => {
+    renderAssistant()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByTestId('ai-header')).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByTestId('ai-floating')).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('打开后暴露完整模态语义并同步展开状态', () => {
+    renderAssistant()
+
+    fireEvent.click(screen.getByTestId('ai-floating'))
+
+    const dialog = screen.getByRole('dialog', { name: 'AI travel assistant' })
+
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    expect(dialog).toHaveAttribute('aria-labelledby', 'ai-assistant-title')
+    expect(dialog.querySelector('h1')).toBeNull()
+    expect(screen.getByTestId('ai-header')).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByTestId('ai-floating')).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('悬浮按钮保留可读名称，窄屏隐藏文字后不会变成无名按钮', () => {
+    renderAssistant()
+
+    expect(screen.getByTestId('ai-floating')).toHaveAttribute(
+      'aria-label',
+      'Open the AI assistant',
+    )
+    expect(screen.getByTestId('ai-floating')).toHaveAttribute('aria-haspopup', 'dialog')
+  })
+
+  it('点击面板内部任意位置都不关闭', () => {
+    renderAssistant()
+    fireEvent.click(screen.getByTestId('ai-header'))
+
+    fireEvent.click(screen.getByRole('heading', { name: 'AI travel assistant' }))
+    fireEvent.click(screen.getByText(/Real conversation is being wired up/))
+    fireEvent.click(screen.getByRole('dialog'))
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('面板已打开时再次触发打开不叠加实例', () => {
+    renderAssistant()
+    fireEvent.click(screen.getByTestId('ai-header'))
+
+    fireEvent.click(screen.getByTestId('ai-floating'))
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(1)
+    expect(screen.getAllByTestId('ai-overlay')).toHaveLength(1)
+    expect(screen.getByTestId('ai-floating')).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('关闭后再打开，焦点归还给最新一次触发元素', () => {
+    renderAssistant()
+    const header = screen.getByTestId('ai-header')
+    const floating = screen.getByTestId('ai-floating')
+
+    header.focus()
+    fireEvent.click(header)
+    fireEvent.click(screen.getByRole('button', { name: 'Close the AI assistant' }))
+    expect(header).toHaveFocus()
+
+    floating.focus()
+    fireEvent.click(floating)
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(floating).toHaveFocus()
+  })
+
+  it('触发元素已从 DOM 移除时关闭静默跳过', () => {
+    render(
+      <AiAssistantProvider>
+        <SelfRemovingTrigger />
+      </AiAssistantProvider>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Temporary trigger' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Temporary trigger' })).not.toBeInTheDocument()
+
+    expect(() =>
+      fireEvent.click(screen.getByRole('button', { name: 'Got it' })),
+    ).not.toThrow()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('无 document 环境调用 open 不抛 ReferenceError', () => {
+    const probe: { current: ReturnType<typeof useAiAssistant> | null } = { current: null }
+
+    function ContextProbe() {
+      probe.current = useAiAssistant()
+      return null
+    }
+
+    const { unmount } = render(
+      <AiAssistantProvider>
+        <ContextProbe />
+      </AiAssistantProvider>,
+    )
+    const open = probe.current!.open
+    unmount()
+
+    vi.stubGlobal('document', undefined)
+    try {
+      expect(() => open()).not.toThrow()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('打开与关闭全程不发起任何网络请求', () => {

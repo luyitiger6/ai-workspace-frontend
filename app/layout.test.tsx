@@ -1,3 +1,4 @@
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import RootLayout, { metadata } from './layout'
 
@@ -20,5 +21,16 @@ describe('根布局语言与元数据', () => {
 
     expect(HAN.test(metadata.openGraph?.title as string)).toBe(false)
     expect(HAN.test(metadata.openGraph?.description as string)).toBe(false)
+  })
+
+  it('服务端首屏含跳转链接与悬浮入口，但不含 AI 遮罩', () => {
+    const html = renderToStaticMarkup(RootLayout({ children: <main id="main-content" /> }))
+
+    expect(html).toContain('href="#main-content"')
+    expect(html).toContain('Skip to main content')
+    expect(html).toContain('aria-label="Open the AI assistant"')
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).not.toContain('data-testid="ai-overlay"')
+    expect(html).not.toContain('role="dialog"')
   })
 })

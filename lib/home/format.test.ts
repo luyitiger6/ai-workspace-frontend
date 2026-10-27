@@ -26,4 +26,9 @@ describe('formatDate', () => {
     // 该时刻在东八区是 10 月 2 日清晨，在 UTC 仍是 10 月 1 日
     expect(formatDate('2026-10-02T06:00:00+08:00')).toBe('Oct 2')
   })
+
+  it('非法时间串直接抛出 RangeError，不静默兜底', () => {
+    expect(() => formatDate('not-a-date')).toThrow(RangeError)
+    expect(() => formatDate('')).toThrow(RangeError)
+  })
 })

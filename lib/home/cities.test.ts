@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { CITIES, cityName, DEFAULT_CITY, isCitySlug, parseCity } from './cities'
+import { CITIES, cityName, cityNameEn, DEFAULT_CITY, isCitySlug, parseCity } from './cities'
+import type { CitySlug } from './types'
 
 describe('城市白名单', () => {
   it('提供 8 个互不重复的 MVP 城市', () => {
@@ -28,5 +29,18 @@ describe('城市白名单', () => {
   it('cityName 返回中文名', () => {
     expect(cityName('xian')).toBe('西安')
     expect(cityName('all')).toBe('全部')
+  })
+
+  it('未收录 slug 的中英文展示名都退回不限城市', () => {
+    const unknown = 'unknown' as CitySlug
+
+    expect(cityName(unknown)).toBe('全部')
+    expect(cityNameEn(unknown)).toBe('All cities')
+  })
+
+  it('cityNameEn 保留专有拼写', () => {
+    expect(cityNameEn('all')).toBe('All cities')
+    expect(cityNameEn('xian')).toBe("Xi'an")
+    expect(cityNameEn('sanya')).toBe('Sanya')
   })
 })
