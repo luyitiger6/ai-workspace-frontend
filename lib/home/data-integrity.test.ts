@@ -69,3 +69,24 @@ describe('双语内容字段完整性', () => {
     })
   }
 })
+
+/**
+ * 景点评分取值域守卫：0–5、最多一位小数。
+ * 越界值会直接显示成 `Rating 9.6` 这类没有分母的读数，属于数据缺陷。
+ */
+describe('景点评分取值域', () => {
+  for (const item of ATTRACTIONS) {
+    it(`attraction:${item.id} 的评分落在 0–5`, () => {
+      const reason = `attraction:${item.id} 评分越界：${item.rating}`
+      expect(item.rating, reason).toBeGreaterThanOrEqual(0)
+      expect(item.rating, reason).toBeLessThanOrEqual(5)
+    })
+
+    it(`attraction:${item.id} 的评分最多一位小数`, () => {
+      expect(
+        Number.isInteger(item.rating * 10),
+        `attraction:${item.id} 评分小数位超过一位：${item.rating}`,
+      ).toBe(true)
+    })
+  }
+})
