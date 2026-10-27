@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 
-import { cityName } from '@/lib/home/cities'
+import { cityNameEn } from '@/lib/home/cities'
 import { mockRepository } from '@/lib/home/repository'
 import type { CitySlug } from '@/lib/home/types'
 import { EmptyState, SectionError, SectionLoading } from './section-state'
@@ -24,18 +24,22 @@ export function EditorPicks({ city }: { city: CitySlug }) {
           <div>
             <p className="wc-eyebrow">Editor&apos;s picks</p>
             <h2 id="editor-picks-title" className="wc-section-title">
-              编辑推荐
+              Editor&apos;s picks
             </h2>
           </div>
-          <p className="wc-section-note">由编辑亲自走过、亲手写下的路线，不是榜单搬运。</p>
+          <p className="wc-section-note">
+            Routes our editors walked themselves and wrote down — not a list copied from somewhere.
+          </p>
         </div>
 
-        {state.status === 'loading' ? <SectionLoading label="编辑正在挑这一期的路线…" /> : null}
+        {state.status === 'loading' ? (
+          <SectionLoading label="Our editors are picking this week's routes…" />
+        ) : null}
         {state.status === 'error' ? (
-          <SectionError message="编辑推荐暂时没能加载出来，稍后再试试。" />
+          <SectionError message="Editor's picks could not load. Please try again later." />
         ) : null}
         {state.status === 'ready' && state.items.length === 0 ? (
-          <EmptyState message={`${cityName(city)}还没有编辑精选，换座城市看看。`} />
+          <EmptyState message={`No editor's picks in ${cityNameEn(city)} yet. Try another city.`} />
         ) : null}
 
         {state.status === 'ready' && state.items.length > 0 ? (
@@ -45,7 +49,7 @@ export function EditorPicks({ city }: { city: CitySlug }) {
                 <Image
                   className={styles.cover}
                   src={pick.coverUrl}
-                  alt={`${pick.title}封面`}
+                  alt={`${pick.titleEn} cover`}
                   width={900}
                   height={675}
                   sizes="(max-width: 640px) calc(100vw - 64px), (max-width: 900px) calc(50vw - 50px), (min-width: 1160px) 347px, calc(33.33vw - 40px)"
@@ -54,11 +58,11 @@ export function EditorPicks({ city }: { city: CitySlug }) {
                 />
                 <div className={styles.body}>
                   <span className={styles.city}>
-                    {pick.city === 'all' ? '全城' : cityName(pick.city)}
+                    {pick.city === 'all' ? 'All cities' : cityNameEn(pick.city)}
                   </span>
-                  <h3 className={styles.title}>{pick.title}</h3>
-                  <p className={styles.summary}>{pick.summary}</p>
-                  <p className={styles.editor}>{pick.editor}</p>
+                  <h3 className={styles.title}>{pick.titleEn}</h3>
+                  <p className={styles.summary}>{pick.summaryEn}</p>
+                  <p className={styles.editor}>{pick.editorEn}</p>
                 </div>
               </li>
             ))}

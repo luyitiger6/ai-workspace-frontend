@@ -20,24 +20,24 @@ describe('Mock 认证', () => {
     const session = await registerAccount({
       email: 'new@wanderchain.dev',
       password: 'secret123',
-      name: '新旅人',
+      name: 'New Traveler',
     })
 
     expect(session.user.email).toBe('new@wanderchain.dev')
-    expect(session.user.name).toBe('新旅人')
+    expect(session.user.name).toBe('New Traveler')
     expect(session.user.role).toBe('user')
     expect(session.token.split('.')).toHaveLength(3)
   })
 
   it('重复邮箱无法注册', async () => {
     await expect(
-      registerAccount({ email: 'admin@wanderchain.dev', password: 'secret123', name: '冒名者' }),
-    ).rejects.toThrow('该邮箱已经注册过了')
+      registerAccount({ email: 'admin@wanderchain.dev', password: 'secret123', name: 'Impostor' }),
+    ).rejects.toThrow('This email is already registered')
   })
 
   it('密码错误时拒绝登录', async () => {
     await expect(loginWithPassword('admin@wanderchain.dev', 'wrong-password')).rejects.toThrow(
-      '邮箱或密码不正确',
+      'Incorrect email or password',
     )
   })
 
@@ -72,22 +72,22 @@ describe('Mock 认证', () => {
 
   it('非法邮箱与过短密码被输入校验拦截', async () => {
     await expect(
-      registerAccount({ email: 'not-an-email', password: 'secret123', name: '路人' }),
+      registerAccount({ email: 'not-an-email', password: 'secret123', name: 'Passerby' }),
     ).rejects.toBeInstanceOf(AuthError)
     await expect(
-      registerAccount({ email: 'ok@wanderchain.dev', password: '123', name: '路人' }),
-    ).rejects.toThrow('密码至少 6 位')
+      registerAccount({ email: 'ok@wanderchain.dev', password: '123', name: 'Passerby' }),
+    ).rejects.toThrow('Password must be at least 6 characters')
   })
 
   it('生产环境下拒绝注册与登录，演示认证不会静默上线', async () => {
     vi.stubEnv('NODE_ENV', 'production')
 
     await expect(loginWithPassword('admin@wanderchain.dev', 'admin123')).rejects.toThrow(
-      '演示认证已停用',
+      'Demo auth is disabled',
     )
     await expect(
-      registerAccount({ email: 'new@wanderchain.dev', password: 'secret123', name: '新旅人' }),
-    ).rejects.toThrow('演示认证已停用')
+      registerAccount({ email: 'new@wanderchain.dev', password: 'secret123', name: 'New Traveler' }),
+    ).rejects.toThrow('Demo auth is disabled')
     expect(readSession()).toBeNull()
   })
 })

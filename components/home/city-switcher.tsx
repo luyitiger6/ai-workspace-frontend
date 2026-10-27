@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { CITIES, cityName } from '@/lib/home/cities'
+import { CITIES, cityNameEn } from '@/lib/home/cities'
 import type { CitySlug } from '@/lib/home/types'
 import styles from './city-switcher.module.css'
 
@@ -42,11 +42,11 @@ export function CitySwitcher({ activeCity, query }: Props) {
           <div>
             <p className="wc-eyebrow">Cities</p>
             <h2 id="city-switcher-title" className="wc-section-title">
-              先选一座城
+              Pick a city first
             </h2>
           </div>
           <p className="wc-section-note">
-            当前：{cityName(activeCity)} · {active.tagline}
+            Now: {cityNameEn(activeCity)} · {active.taglineEn}
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export function CitySwitcher({ activeCity, query }: Props) {
                   aria-pressed={isActive}
                   onClick={() => select(city.slug)}
                 >
-                  {city.name}
+                  {city.nameEn}
                 </button>
               </li>
             )

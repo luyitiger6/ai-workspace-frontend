@@ -4,8 +4,8 @@ import { AuthForm } from '@/components/auth/auth-form'
 import styles from '../auth.module.css'
 
 export const metadata: Metadata = {
-  title: '注册',
-  description: '注册后即可收藏路线、发布帖子。',
+  title: 'Sign up',
+  description: 'Sign up to save routes and publish posts.',
 }
 
 export default function RegisterPage() {
@@ -16,8 +16,8 @@ export default function RegisterPage() {
           <Link className={styles.logo} href="/">
             wanderchain
           </Link>
-          <p className={styles.quote}>先写下你想去哪，路线会慢慢长出来。</p>
-          <p className={styles.quoteNote}>注册只需要邮箱、用户名和密码。</p>
+          <p className={styles.quote}>Write down where you want to go, and the route will grow from there.</p>
+          <p className={styles.quoteNote}>Signing up only needs an email, a username and a password.</p>
         </aside>
         <div className={styles.panel}>
           <AuthForm mode="register" />

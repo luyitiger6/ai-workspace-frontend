@@ -8,55 +8,76 @@ export const EDITOR_PICKS: readonly EditorPick[] = [
   {
     id: 1,
     title: '在故宫的黄昏里走一圈',
+    titleEn: 'A walk through the Forbidden City at dusk',
     summary: '闭馆前一小时的中轴线，人潮退去，琉璃瓦把光还给了天空。',
+    summaryEn:
+      'One hour before closing on the central axis: the crowds thin out, and the glazed tiles give the light back to the sky.',
     city: 'beijing',
     coverUrl: cover('photo-1508804185872-d7badad00f7d'),
     editor: '主编 阿岚',
+    editorEn: 'Editor-in-chief Aran',
     sortOrder: 10,
   },
   {
     id: 2,
     title: '武康路的梧桐与咖啡',
+    titleEn: 'Plane trees and coffee on Wukang Road',
     summary: '从安福路拐进武康路，一下午只需要两杯咖啡和一次走神。',
+    summaryEn:
+      'Turn off Anfu Road onto Wukang Road: an afternoon needs only two coffees and one moment of drifting.',
     city: 'shanghai',
     coverUrl: cover('photo-1519501025264-65ba15a82390'),
     editor: '编辑 林深',
+    editorEn: 'Editor Linshen',
     sortOrder: 20,
   },
   {
     id: 3,
     title: '人民公园的一杯盖碗茶',
+    titleEn: "A gaiwan of tea in People's Park",
     summary: '成都的下午从竹椅开始，茶续三次，话题才刚热起来。',
+    summaryEn:
+      'An afternoon in Chengdu starts with a bamboo chair; the tea is refilled three times before the conversation warms up.',
     city: 'chengdu',
     coverUrl: cover('photo-1544787219-7f47ccb76574'),
     editor: '编辑 小舟',
+    editorEn: 'Editor Xiaozhou',
     sortOrder: 20,
   },
   {
     id: 4,
     title: '七天假期，只带一个背包',
+    titleEn: 'Seven days, one backpack',
     summary: '把行李压到 7 公斤之后，旅程反而变长了。',
+    summaryEn: 'Once the pack is down to 7 kg, the trip gets longer.',
     city: 'all',
     coverUrl: cover('photo-1476514525535-07fb3b4ae5f1'),
     editor: '主编 阿岚',
+    editorEn: 'Editor-in-chief Aran',
     sortOrder: 30,
   },
   {
     id: 5,
     title: '西湖以西，茶山之间',
+    titleEn: 'West of West Lake, among the tea hills',
     summary: '龙井村往梅家坞，走一条没有游客的土路。',
+    summaryEn: 'From Longjing Village to Meijiawu: a dirt path with no tourists on it.',
     city: 'hangzhou',
     coverUrl: cover('photo-1441974231531-c6227db76b6e'),
     editor: '编辑 林深',
+    editorEn: 'Editor Linshen',
     sortOrder: 40,
   },
   {
     id: 6,
     title: '城墙骑行：十三公里的风',
+    titleEn: 'Riding the city wall: thirteen kilometers of wind',
     summary: '租一辆旧自行车，绕西安城墙一圈，刚好一个日落。',
+    summaryEn: "Rent an old bicycle, circle Xi'an's city wall, and it takes exactly one sunset.",
     city: 'xian',
     coverUrl: cover('photo-1526772662000-3f88f10405ff'),
     editor: '编辑 陈默',
+    editorEn: 'Editor Chenmo',
     sortOrder: 50,
   },
 ]
@@ -65,7 +86,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 1,
     title: '在故宫闭馆前的最后半小时',
+    titleEn: 'The last half hour before the Forbidden City closes',
     author: '林深',
+    authorEn: 'Linshen',
     city: 'beijing',
     status: 'draft',
     commentCount: 88,
@@ -75,7 +98,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 2,
     title: '外滩的风，从黄昏吹到夜里',
+    titleEn: 'The Bund: wind from dusk into the night',
     author: '阿岚',
+    authorEn: 'Aran',
     city: 'shanghai',
     status: 'published',
     commentCount: 42,
@@ -85,7 +110,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 3,
     title: '成都的雨，落进了盖碗茶里',
+    titleEn: 'Chengdu rain, falling into a cup of tea',
     author: '小舟',
+    authorEn: 'Xiaozhou',
     city: 'chengdu',
     status: 'published',
     commentCount: 42,
@@ -95,7 +122,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 4,
     title: '西安城墙骑行全记录',
+    titleEn: "Riding the whole Xi'an city wall",
     author: '陈默',
+    authorEn: 'Chenmo',
     city: 'xian',
     status: 'published',
     commentCount: 31,
@@ -105,7 +134,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 5,
     title: '广州早茶地图：一周七天不重样',
+    titleEn: 'Guangzhou morning tea map: seven days, no repeats',
     author: '阿岚',
+    authorEn: 'Aran',
     city: 'guangzhou',
     status: 'published',
     commentCount: 28,
@@ -115,7 +146,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 6,
     title: '杭州茶山徒步，走错路才是惊喜',
+    titleEn: 'Hiking the Hangzhou tea hills: the wrong turn is the surprise',
     author: '林深',
+    authorEn: 'Linshen',
     city: 'hangzhou',
     status: 'published',
     commentCount: 27,
@@ -125,7 +158,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 7,
     title: '三亚的冬天，从一杯椰子水开始',
+    titleEn: 'Winter in Sanya starts with a glass of coconut water',
     author: '小舟',
+    authorEn: 'Xiaozhou',
     city: 'sanya',
     status: 'published',
     commentCount: 25,
@@ -135,7 +170,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 8,
     title: '北京胡同里的独立书店',
+    titleEn: 'Independent bookshops in Beijing hutongs',
     author: '陈默',
+    authorEn: 'Chenmo',
     city: 'beijing',
     status: 'published',
     commentCount: 22,
@@ -145,7 +182,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 9,
     title: '上海梧桐区散步路线',
+    titleEn: "A walking route through Shanghai's plane-tree district",
     author: '林深',
+    authorEn: 'Linshen',
     city: 'shanghai',
     status: 'published',
     commentCount: 19,
@@ -155,7 +194,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 10,
     title: '成都周边两日：古镇与竹林',
+    titleEn: 'Two days around Chengdu: old towns and bamboo groves',
     author: '阿岚',
+    authorEn: 'Aran',
     city: 'chengdu',
     status: 'published',
     commentCount: 18,
@@ -165,7 +206,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 11,
     title: '广州骑楼下的糖水铺',
+    titleEn: 'Sweet soup shops under Guangzhou arcades',
     author: '小舟',
+    authorEn: 'Xiaozhou',
     city: 'guangzhou',
     status: 'published',
     commentCount: 16,
@@ -175,7 +218,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 12,
     title: '西安回民街的清晨六点',
+    titleEn: "Six in the morning on Xi'an's Muslim Quarter",
     author: '陈默',
+    authorEn: 'Chenmo',
     city: 'xian',
     status: 'published',
     commentCount: 15,
@@ -185,7 +230,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 13,
     title: '三亚后海村冲浪第一课',
+    titleEn: 'First surf lesson at Houhai Village, Sanya',
     author: '林深',
+    authorEn: 'Linshen',
     city: 'sanya',
     status: 'published',
     commentCount: 12,
@@ -195,7 +242,9 @@ export const POSTS: readonly Post[] = [
   {
     id: 14,
     title: '已删除的旧帖',
+    titleEn: 'A removed old post',
     author: '匿名',
+    authorEn: 'Anonymous',
     city: 'beijing',
     status: 'removed',
     commentCount: 99,
@@ -208,6 +257,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 1,
     name: '故宫博物院',
+    nameEn: 'The Palace Museum',
     city: 'beijing',
     coverUrl: cover('photo-1508804185872-d7badad00f7d'),
     rating: 9.6,
@@ -218,6 +268,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 2,
     name: '外滩',
+    nameEn: 'The Bund',
     city: 'shanghai',
     coverUrl: cover('photo-1519501025264-65ba15a82390'),
     rating: 9.3,
@@ -228,6 +279,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 3,
     name: '西湖',
+    nameEn: 'West Lake',
     city: 'hangzhou',
     coverUrl: cover('photo-1501785888041-af3ef285b470'),
     rating: 9.5,
@@ -238,6 +290,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 4,
     name: '秦始皇兵马俑',
+    nameEn: 'Terracotta Army',
     city: 'xian',
     coverUrl: cover('photo-1526772662000-3f88f10405ff'),
     rating: 9.2,
@@ -248,6 +301,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 5,
     name: '亚龙湾',
+    nameEn: 'Yalong Bay',
     city: 'sanya',
     coverUrl: cover('photo-1507525428034-b723cf961d3e'),
     rating: 9.0,
@@ -258,6 +312,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 6,
     name: '宽窄巷子',
+    nameEn: 'Kuanzhai Alley',
     city: 'chengdu',
     coverUrl: cover('photo-1500530855697-b586d89ba3ee'),
     rating: 8.8,
@@ -268,6 +323,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 7,
     name: '沙面岛',
+    nameEn: 'Shamian Island',
     city: 'guangzhou',
     coverUrl: cover('photo-1469474968028-56623f02e42e'),
     rating: 8.7,
@@ -278,6 +334,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 8,
     name: '未开放的观景台',
+    nameEn: 'A viewing deck not yet open',
     city: 'beijing',
     coverUrl: cover('photo-1476514525535-07fb3b4ae5f1'),
     rating: 9.9,
@@ -288,6 +345,7 @@ export const ATTRACTIONS: readonly Attraction[] = [
   {
     id: 9,
     name: '已下线的旧景点',
+    nameEn: 'A retired old attraction',
     city: 'shanghai',
     coverUrl: cover('photo-1500530855697-b586d89ba3ee'),
     rating: 9.9,

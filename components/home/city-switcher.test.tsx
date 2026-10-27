@@ -17,14 +17,14 @@ describe('城市快速入口', () => {
     render(<CitySwitcher activeCity="all" query={{}} />)
 
     expect(screen.getAllByRole('button')).toHaveLength(8)
-    expect(screen.getByRole('button', { name: '北京' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '三亚' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Beijing' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sanya' })).toBeInTheDocument()
   })
 
   it('点击城市把 slug 写入 city 查询参数', () => {
     render(<CitySwitcher activeCity="all" query={{}} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '北京' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Beijing' }))
 
     expect(replace).toHaveBeenCalledWith('/?city=beijing')
   })
@@ -32,7 +32,7 @@ describe('城市快速入口', () => {
   it('选中 all 时删除 city 参数', () => {
     render(<CitySwitcher activeCity="beijing" query={{ city: 'beijing' }} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '全部' }))
+    fireEvent.click(screen.getByRole('button', { name: 'All cities' }))
 
     expect(replace).toHaveBeenCalledWith('/')
   })
@@ -40,7 +40,7 @@ describe('城市快速入口', () => {
   it('切换城市时保留其他查询参数', () => {
     render(<CitySwitcher activeCity="beijing" query={{ city: 'beijing', ref: 'home' }} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '上海' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Shanghai' }))
 
     expect(replace).toHaveBeenCalledTimes(1)
     const target = replace.mock.calls[0][0] as string
@@ -56,13 +56,13 @@ describe('城市快速入口', () => {
       .filter((button) => button.getAttribute('aria-pressed') === 'true')
 
     expect(pressed).toHaveLength(1)
-    expect(pressed[0]).toHaveTextContent('杭州')
+    expect(pressed[0]).toHaveTextContent('Hangzhou')
   })
 
   it('重复点击当前城市不产生新的导航', () => {
     render(<CitySwitcher activeCity="sanya" query={{ city: 'sanya' }} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '三亚' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sanya' }))
 
     expect(replace).not.toHaveBeenCalled()
   })

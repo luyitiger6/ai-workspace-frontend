@@ -14,15 +14,15 @@ describe('热门景点区块', () => {
     const items = await screen.findAllByRole('listitem')
 
     expect(items).toHaveLength(5)
-    expect(items[0]).toHaveTextContent('故宫博物院')
-    expect(items[1]).toHaveTextContent('外滩')
-    expect(items[4]).toHaveTextContent('亚龙湾')
+    expect(items[0]).toHaveTextContent('The Palace Museum')
+    expect(items[1]).toHaveTextContent('The Bund')
+    expect(items[4]).toHaveTextContent('Yalong Bay')
   })
 
   it('封面图按响应式档位出图并延迟加载', async () => {
     render(<HotAttractions city="all" />)
 
-    const covers = await screen.findAllByRole('img', { name: /封面$/ })
+    const covers = await screen.findAllByRole('img', { name: / cover$/ })
 
     expect(covers).toHaveLength(5)
 
@@ -47,8 +47,8 @@ describe('热门景点区块', () => {
 
     await screen.findAllByRole('listitem')
 
-    expect(screen.queryByText('未开放的观景台')).not.toBeInTheDocument()
-    expect(screen.queryByText('已下线的旧景点')).not.toBeInTheDocument()
+    expect(screen.queryByText('A viewing deck not yet open')).not.toBeInTheDocument()
+    expect(screen.queryByText('A retired old attraction')).not.toBeInTheDocument()
   })
 
   it('没有景点时展示空态', async () => {
@@ -56,7 +56,7 @@ describe('热门景点区块', () => {
 
     render(<HotAttractions city="sanya" />)
 
-    expect(await screen.findByText(/还没有收录景点/)).toBeInTheDocument()
+    expect(await screen.findByText(/Browse attractions in Sanya/)).toBeInTheDocument()
   })
 
   it('数据源失败时展示错误态', async () => {
@@ -66,6 +66,6 @@ describe('热门景点区块', () => {
 
     render(<HotAttractions city="all" />)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('热门景点暂时没能加载出来')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Popular attractions could not load')
   })
 })

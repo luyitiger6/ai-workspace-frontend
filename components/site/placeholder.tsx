@@ -15,10 +15,10 @@ export function PlaceholderPage({ eyebrow, title, description }: Props) {
         <p className={styles.eyebrow}>{eyebrow}</p>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.description}>{description}</p>
-        <p className={styles.note}>这个板块正在建设中，先把首页逛熟。</p>
+        <p className={styles.note}>This section is still being built. Start from the homepage.</p>
         <div className={styles.actions}>
           <Link className="wc-button wc-button--primary" href="/">
-            回到首页
+            Back to homepage
           </Link>
         </div>
       </div>

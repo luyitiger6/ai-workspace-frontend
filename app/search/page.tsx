@@ -7,8 +7,8 @@ import { searchContent } from '@/lib/search/query'
 import styles from './search.module.css'
 
 export const metadata: Metadata = {
-  title: '搜索',
-  description: '在 wanderchain 的全部编辑推荐、帖子与景点里查找城市与路线。',
+  title: 'Search',
+  description: 'Search every editor pick, post and attraction on wanderchain by city or route.',
 }
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -41,24 +41,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <main id="main-content" className={styles.main}>
         <div className={`wc-container ${styles.inner}`}>
           <p className="wc-eyebrow">Search</p>
-          <h1 className={styles.title}>站内搜索</h1>
+          <h1 className={styles.title}>Search the site</h1>
 
           {!asked ? (
             <div className={styles.state}>
               <p className={styles.stateText}>
-                输入一个城市、帖子或景点的名字，从全部内容里找。首页只放最热的一屏，剩下的都在这里。
+                Type the name of a city, a post or an attraction to search across everything. The
+                homepage only shows the hottest screen; the rest lives here.
               </p>
               <Link className={styles.stateLink} href="/">
-                回到首页开始逛
+                Back to the homepage
               </Link>
             </div>
           ) : null}
 
           {asked && outcome.total === 0 ? (
             <div className={styles.state}>
-              <p className={styles.stateText}>没有找到与「{outcome.query}」有关的内容。</p>
+              <p className={styles.stateText}>Nothing found for “{outcome.query}”.</p>
               <Link className={styles.stateLink} href="/">
-                回到首页看看
+                Back to the homepage
               </Link>
             </div>
           ) : null}
@@ -66,7 +67,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {asked && outcome.total > 0 ? (
             <>
               <p className={styles.status}>
-                关键词「{outcome.query}」共 {outcome.total} 条结果。
+                {outcome.total} results for “{outcome.query}”.
               </p>
 
               <div className={styles.groups}>
@@ -80,7 +81,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       <h2 id={`search-group-${group.kind}`} className={styles.groupTitle}>
                         {group.heading}
                       </h2>
-                      <p className={styles.count}>{group.count} 条</p>
+                      <p className={styles.count}>{group.count}</p>
                     </div>
 
                     <ul className={styles.list}>

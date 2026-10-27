@@ -21,52 +21,54 @@ export function HomeHero() {
       <div className={styles.fade} aria-hidden="true" />
 
       <div className={`wc-container ${styles.inner}`}>
-        <p className={`wc-eyebrow ${styles.eyebrow}`}>wanderchain · 城市旅行指南</p>
+        <p className={`wc-eyebrow ${styles.eyebrow}`}>wanderchain · City travel guide</p>
         <h1 id="hero-title" className={styles.title}>
-          把想去的地方，走成一条能出发的路线。
+          Turn a place you want to see into a route you can start today.
         </h1>
         <p className={styles.lead}>
-          {CITY_COUNT} 座城市，编辑走过的路线、正在被讨论的帖子与值得专程前往的景点，
-          都在同一个搜索框里。
+          {CITY_COUNT} cities, routes walked by our editors, posts being discussed right now, and
+          places worth the detour — all behind one search box.
         </p>
 
         <form className={styles.search} action="/search" method="get" role="search">
           <label className="wc-visually-hidden" htmlFor="hero-search">
-            搜索城市、帖子或景点
+            Search cities, posts or attractions
           </label>
           <input
             id="hero-search"
             className={styles.searchInput}
             type="search"
             name="q"
-            placeholder="搜城市、帖子或景点，例如「成都」"
+            placeholder="Search cities, posts or attractions, e.g. Chengdu"
             autoComplete="off"
             required
           />
           <button className="wc-button wc-button--primary" type="submit">
-            搜索
+            Search
           </button>
         </form>
 
         <p className={styles.links}>
           <Link className={styles.link} href="/community">
-            进入旅游社区
+            Enter the travel community
           </Link>
           <span className={styles.dot} aria-hidden="true">
             ·
           </span>
           <Link className={styles.link} href="/attractions">
-            查看景点攻略
+            Browse attraction guides
           </Link>
           <span className={styles.dot} aria-hidden="true">
             ·
           </span>
           <a className={styles.link} href="#cities">
-            按城市逛 →
+            Browse by city →
           </a>
         </p>
 
-        <p className={styles.meta}>当前覆盖 {CITY_COUNT} 座城市，每周由编辑重新走一遍。</p>
+        <p className={styles.meta}>
+          Currently covering {CITY_COUNT} cities, re-walked by our editors every week.
+        </p>
       </div>
     </section>
   )

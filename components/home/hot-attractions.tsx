@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 
-import { cityName } from '@/lib/home/cities'
+import { cityNameEn } from '@/lib/home/cities'
 import { formatCount } from '@/lib/home/format'
 import { mockRepository } from '@/lib/home/repository'
 import type { CitySlug } from '@/lib/home/types'
@@ -25,18 +25,18 @@ export function HotAttractions({ city }: { city: CitySlug }) {
           <div>
             <p className="wc-eyebrow">Places</p>
             <h2 id="hot-attractions-title" className="wc-section-title">
-              热门景点
+              Popular attractions
             </h2>
           </div>
-          <p className="wc-section-note">按浏览量与发布时间排序。</p>
+          <p className="wc-section-note">Ranked by views and publish time.</p>
         </div>
 
-        {state.status === 'loading' ? <SectionLoading label="正在收集景点数据…" /> : null}
+        {state.status === 'loading' ? <SectionLoading label="Gathering attraction data…" /> : null}
         {state.status === 'error' ? (
-          <SectionError message="热门景点暂时没能加载出来，稍后再试试。" />
+          <SectionError message="Popular attractions could not load. Please try again later." />
         ) : null}
         {state.status === 'ready' && state.items.length === 0 ? (
-          <EmptyState message={`${cityName(city)}还没有收录景点，换座城市看看。`} />
+          <EmptyState message={`Browse attractions in ${cityNameEn(city)}.`} />
         ) : null}
 
         {state.status === 'ready' && state.items.length > 0 ? (
@@ -46,7 +46,7 @@ export function HotAttractions({ city }: { city: CitySlug }) {
                 <Image
                   className={styles.cover}
                   src={item.coverUrl}
-                  alt={`${item.name}封面`}
+                  alt={`${item.nameEn} cover`}
                   width={600}
                   height={600}
                   sizes="(max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)"
@@ -54,11 +54,11 @@ export function HotAttractions({ city }: { city: CitySlug }) {
                   decoding="async"
                 />
                 <div className={styles.body}>
-                  <h3 className={styles.name}>{item.name}</h3>
+                  <h3 className={styles.name}>{item.nameEn}</h3>
                   <p className={styles.meta}>
-                    {cityName(item.city)} · 评分 {item.rating.toFixed(1)}
+                    {cityNameEn(item.city)} · Rating {item.rating.toFixed(1)}
                   </p>
-                  <p className={styles.views}>{formatCount(item.viewCount)} 浏览</p>
+                  <p className={styles.views}>{formatCount(item.viewCount)} views</p>
                 </div>
               </li>
             ))}

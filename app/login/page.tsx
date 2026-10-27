@@ -4,8 +4,8 @@ import { AuthForm } from '@/components/auth/auth-form'
 import styles from '../auth.module.css'
 
 export const metadata: Metadata = {
-  title: '登录',
-  description: '登录后继续你的下一段路线。',
+  title: 'Log in',
+  description: 'Log in to continue to your next route.',
 }
 
 export default function LoginPage() {
@@ -16,8 +16,8 @@ export default function LoginPage() {
           <Link className={styles.logo} href="/">
             wanderchain
           </Link>
-          <p className={styles.quote}>把每一次出发，写成人能看懂的路线。</p>
-          <p className={styles.quoteNote}>登录后可收藏路线、发布帖子。</p>
+          <p className={styles.quote}>Every trip, written as a route a person can follow.</p>
+          <p className={styles.quoteNote}>Log in to save routes and publish posts.</p>
         </aside>
         <div className={styles.panel}>
           <AuthForm mode="login" />

@@ -51,18 +51,18 @@ const LINK_ENTRIES = [
   {
     key: 'community',
     href: '/community',
-    title: '旅游社区',
-    description: '看别人怎么走，也把你的路线写下来。',
-    action: '进入社区',
+    title: 'Travel community',
+    description: 'See how others got around, then write your own route down.',
+    action: 'Enter community',
     Icon: CommunityIcon,
     tone: 'green' as const,
   },
   {
     key: 'attractions',
     href: '/attractions',
-    title: '景点攻略',
-    description: '按城市与季节，挑一个不踩雷的地方。',
-    action: '查看攻略',
+    title: 'Attraction guides',
+    description: 'Pick a place by city and season that will not disappoint.',
+    action: 'Browse guides',
     Icon: MapIcon,
     tone: 'sand' as const,
   },
@@ -78,10 +78,10 @@ export function FeatureNav() {
           <div>
             <p className="wc-eyebrow">Explore</p>
             <h2 id="feature-nav-title" className="wc-section-title">
-              从哪里开始
+              Where to start
             </h2>
           </div>
-          <p className="wc-section-note">三个入口，覆盖逛、查、问三件事。</p>
+          <p className="wc-section-note">Three entrances covering three things: wander, look up, ask.</p>
         </div>
 
         <ul className={styles.grid} data-layout="grid">
@@ -103,9 +103,9 @@ export function FeatureNav() {
               <span className={styles.icon}>
                 <SparkIcon />
               </span>
-              <span className={styles.cardTitle}>AI 助手</span>
-              <span className={styles.cardText}>把行程、预算和疑问交给它。</span>
-              <span className={styles.action}>打开占位面板 →</span>
+              <span className={styles.cardTitle}>AI assistant</span>
+              <span className={styles.cardText}>Hand it your itinerary, budget and questions.</span>
+              <span className={styles.action}>Open the placeholder panel →</span>
             </button>
           </li>
         </ul>

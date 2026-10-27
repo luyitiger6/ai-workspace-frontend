@@ -14,7 +14,7 @@ export function AccountMenu() {
   if (!user) {
     return (
       <Link className={styles.login} href="/login">
-        登录 / 注册
+        Log in / Sign up
       </Link>
     )
   }
@@ -22,9 +22,9 @@ export function AccountMenu() {
   return (
     <div className={styles.user}>
       <span className={styles.name}>{user.name}</span>
-      {user.role === 'admin' ? <span className={styles.role}>编辑</span> : null}
+      {user.role === 'admin' ? <span className={styles.role}>Editor</span> : null}
       <button type="button" className={styles.logout} onClick={logout}>
-        退出
+        Log out
       </button>
     </div>
   )

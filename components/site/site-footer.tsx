@@ -6,9 +6,9 @@ export function SiteFooter() {
       <div className={`wc-container ${styles.inner}`}>
         <div>
           <p className={styles.brand}>wanderchain</p>
-          <p className={styles.note}>把每一次出发，写成人能看懂的路线。</p>
+          <p className={styles.note}>Every trip, written as a route a person can follow.</p>
         </div>
-        <p className={styles.meta}>MVP 预览 · 内容来自本地 Mock 契约</p>
+        <p className={styles.meta}>MVP preview · Content comes from a local mock contract</p>
       </div>
     </footer>
   )

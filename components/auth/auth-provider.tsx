@@ -33,7 +33,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function useAuth(): AuthContextValue {
   const value = useContext(AuthContext)
   if (!value) {
-    throw new Error('useAuth 必须在 AuthProvider 内使用')
+    throw new Error('useAuth must be used inside AuthProvider')
   }
   return value
 }

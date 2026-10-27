@@ -46,14 +46,14 @@ const SEED_ACCOUNTS: readonly StoredAccount[] = [
   {
     id: 'u-admin',
     email: 'admin@wanderchain.dev',
-    name: '主编阿岚',
+    name: 'Editor Lan',
     role: 'admin',
     password: 'admin123',
   },
   {
     id: 'u-traveler',
     email: 'traveler@wanderchain.dev',
-    name: '旅人小舟',
+    name: 'Traveler Zhou',
     role: 'user',
     password: 'traveler123',
   },
@@ -124,10 +124,10 @@ function persistSession(user: AuthUser): Session {
 
 function validateCredentials(email: string, password: string): void {
   if (!EMAIL_PATTERN.test(email)) {
-    throw new AuthError('请输入有效的邮箱地址')
+    throw new AuthError('Enter a valid email address')
   }
   if (password.length < PASSWORD_MIN_LENGTH) {
-    throw new AuthError(`密码至少 ${PASSWORD_MIN_LENGTH} 位`)
+    throw new AuthError(`Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
   }
 }
 
@@ -139,7 +139,7 @@ function validateCredentials(email: string, password: string): void {
  */
 function assertDemoEnvironment(): void {
   if (process.env.NODE_ENV === 'production') {
-    throw new AuthError('演示认证已停用：生产环境必须接入服务端签发的真实认证。')
+    throw new AuthError('Demo auth is disabled: production must use real server-issued authentication.')
   }
 }
 
@@ -151,10 +151,10 @@ export async function registerAccount(input: RegisterInput): Promise<Session> {
 
   validateCredentials(email, input.password)
   if (name.length < 2) {
-    throw new AuthError('用户名至少 2 个字符')
+    throw new AuthError('Username must be at least 2 characters')
   }
   if (allAccounts().some((account) => account.email === email)) {
-    throw new AuthError('该邮箱已经注册过了')
+    throw new AuthError('This email is already registered')
   }
 
   const account: StoredAccount = {
@@ -176,7 +176,7 @@ export async function loginWithPassword(email: string, password: string): Promis
   const account = allAccounts().find((item) => item.email === normalized)
 
   if (!account || account.password !== password) {
-    throw new AuthError('邮箱或密码不正确')
+    throw new AuthError('Incorrect email or password')
   }
 
   return persistSession(toUser(account))

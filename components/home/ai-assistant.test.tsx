@@ -26,8 +26,8 @@ describe('AI 助手入口', () => {
 
     fireEvent.click(screen.getByTestId('ai-header'))
 
-    expect(screen.getByRole('dialog', { name: 'AI 旅行助手' })).toBeInTheDocument()
-    expect(screen.getByText(/真实对话能力正在接入/)).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'AI travel assistant' })).toBeInTheDocument()
+    expect(screen.getByText(/Real conversation is being wired up/)).toBeInTheDocument()
   })
 
   it('悬浮按钮与顶部入口打开同一个面板', () => {
@@ -35,19 +35,19 @@ describe('AI 助手入口', () => {
 
     fireEvent.click(screen.getByTestId('ai-floating'))
     expect(screen.getAllByRole('dialog')).toHaveLength(1)
-    fireEvent.click(screen.getByRole('button', { name: '关闭 AI 助手' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close the AI assistant' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByTestId('ai-header'))
     expect(screen.getAllByRole('dialog')).toHaveLength(1)
-    expect(screen.getByRole('dialog', { name: 'AI 旅行助手' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'AI travel assistant' })).toBeInTheDocument()
   })
 
   it('点击关闭按钮收起面板', () => {
     renderAssistant()
     fireEvent.click(screen.getByTestId('ai-header'))
 
-    fireEvent.click(screen.getByRole('button', { name: '关闭 AI 助手' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close the AI assistant' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
@@ -75,7 +75,7 @@ describe('AI 助手入口', () => {
     renderAssistant()
 
     fireEvent.click(screen.getByTestId('ai-floating'))
-    fireEvent.click(screen.getByRole('button', { name: '知道了' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }))
 
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -87,7 +87,7 @@ describe('AI 助手入口', () => {
 
         fireEvent.click(screen.getByTestId(testId))
 
-        expect(screen.getByRole('button', { name: '关闭 AI 助手' })).toHaveFocus()
+        expect(screen.getByRole('button', { name: 'Close the AI assistant' })).toHaveFocus()
         unmount()
       }
     })
@@ -96,8 +96,8 @@ describe('AI 助手入口', () => {
       renderAssistant()
       fireEvent.click(screen.getByTestId('ai-header'))
 
-      const closeButton = screen.getByRole('button', { name: '关闭 AI 助手' })
-      const confirmButton = screen.getByRole('button', { name: '知道了' })
+      const closeButton = screen.getByRole('button', { name: 'Close the AI assistant' })
+      const confirmButton = screen.getByRole('button', { name: 'Got it' })
 
       confirmButton.focus()
       expect(confirmButton).toHaveFocus()
@@ -111,8 +111,8 @@ describe('AI 助手入口', () => {
       renderAssistant()
       fireEvent.click(screen.getByTestId('ai-header'))
 
-      const closeButton = screen.getByRole('button', { name: '关闭 AI 助手' })
-      const confirmButton = screen.getByRole('button', { name: '知道了' })
+      const closeButton = screen.getByRole('button', { name: 'Close the AI assistant' })
+      const confirmButton = screen.getByRole('button', { name: 'Got it' })
 
       closeButton.focus()
       expect(closeButton).toHaveFocus()
@@ -124,8 +124,8 @@ describe('AI 助手入口', () => {
 
     it('四种关闭方式都把焦点还给触发元素', () => {
       const closers: Array<[string, () => void]> = [
-        ['关闭按钮', () => fireEvent.click(screen.getByRole('button', { name: '关闭 AI 助手' }))],
-        ['知道了按钮', () => fireEvent.click(screen.getByRole('button', { name: '知道了' }))],
+        ['关闭按钮', () => fireEvent.click(screen.getByRole('button', { name: 'Close the AI assistant' }))],
+        ['Got it 按钮', () => fireEvent.click(screen.getByRole('button', { name: 'Got it' }))],
         ['Esc', () => fireEvent.keyDown(document, { key: 'Escape' })],
         ['点击遮罩', () => fireEvent.click(screen.getByTestId('ai-overlay'))],
       ]
@@ -153,7 +153,7 @@ describe('AI 助手入口', () => {
 
       expect(document.body.style.overflow).toBe('hidden')
 
-      fireEvent.click(screen.getByRole('button', { name: '知道了' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Got it' }))
 
       expect(document.body.style.overflow).toBe('scroll')
     })

@@ -20,7 +20,7 @@ describe('账号入口', () => {
   it('访客看到登录入口', async () => {
     renderMenu()
 
-    expect(await screen.findByRole('link', { name: '登录 / 注册' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Log in / Sign up' })).toBeInTheDocument()
   })
 
   it('已登录用户看到用户名与角色标记', async () => {
@@ -28,18 +28,18 @@ describe('账号入口', () => {
 
     renderMenu()
 
-    expect(await screen.findByText('主编阿岚')).toBeInTheDocument()
-    expect(screen.getByText('编辑')).toBeInTheDocument()
+    expect(await screen.findByText('Editor Lan')).toBeInTheDocument()
+    expect(screen.getByText('Editor')).toBeInTheDocument()
   })
 
   it('退出后回到访客态', async () => {
     await loginWithPassword('traveler@wanderchain.dev', 'traveler123')
     renderMenu()
 
-    fireEvent.click(await screen.findByRole('button', { name: '退出' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Log out' }))
 
-    expect(await screen.findByRole('link', { name: '登录 / 注册' })).toBeInTheDocument()
-    expect(screen.queryByText('旅人小舟')).not.toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Log in / Sign up' })).toBeInTheDocument()
+    expect(screen.queryByText('Traveler Zhou')).not.toBeInTheDocument()
   })
 
   it('普通用户不显示编辑标记', async () => {
@@ -47,7 +47,7 @@ describe('账号入口', () => {
 
     renderMenu()
 
-    expect(await screen.findByText('旅人小舟')).toBeInTheDocument()
-    expect(screen.queryByText('编辑')).not.toBeInTheDocument()
+    expect(await screen.findByText('Traveler Zhou')).toBeInTheDocument()
+    expect(screen.queryByText('Editor')).not.toBeInTheDocument()
   })
 })

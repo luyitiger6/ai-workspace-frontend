@@ -1,6 +1,6 @@
 'use client'
 
-import { cityName } from '@/lib/home/cities'
+import { cityNameEn } from '@/lib/home/cities'
 import { formatCount, formatDate } from '@/lib/home/format'
 import { mockRepository } from '@/lib/home/repository'
 import type { CitySlug } from '@/lib/home/types'
@@ -23,18 +23,20 @@ export function HotPosts({ city }: { city: CitySlug }) {
           <div>
             <p className="wc-eyebrow">Trending</p>
             <h2 id="hot-posts-title" className="wc-section-title">
-              热门帖子
+              Trending posts
             </h2>
           </div>
-          <p className="wc-section-note">按评论、浏览与发布时间排序。</p>
+          <p className="wc-section-note">Ranked by comments, views and publish time.</p>
         </div>
 
-        {state.status === 'loading' ? <SectionLoading label="正在统计这周的热度…" /> : null}
+        {state.status === 'loading' ? (
+          <SectionLoading label="Measuring this week's buzz…" />
+        ) : null}
         {state.status === 'error' ? (
-          <SectionError message="热门帖子暂时没能加载出来，稍后再试试。" />
+          <SectionError message="Trending posts could not load. Please try again later." />
         ) : null}
         {state.status === 'ready' && state.items.length === 0 ? (
-          <EmptyState message={`${cityName(city)}还没有帖子，去社区写第一篇。`} />
+          <EmptyState message={`Be the first to ask in ${cityNameEn(city)}.`} />
         ) : null}
 
         {state.status === 'ready' && state.items.length > 0 ? (
@@ -45,13 +47,13 @@ export function HotPosts({ city }: { city: CitySlug }) {
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <div className={styles.content}>
-                  <h3 className={styles.title}>{post.title}</h3>
+                  <h3 className={styles.title}>{post.titleEn}</h3>
                   <p className={styles.meta}>
-                    {post.author} · {cityName(post.city)} · {formatDate(post.publishedAt)}
+                    {post.authorEn} · {cityNameEn(post.city)} · {formatDate(post.publishedAt)}
                   </p>
                 </div>
                 <p className={styles.stats}>
-                  {post.commentCount} 评论 · {formatCount(post.viewCount)} 浏览
+                  {post.commentCount} comments · {formatCount(post.viewCount)} views
                 </p>
               </li>
             ))}

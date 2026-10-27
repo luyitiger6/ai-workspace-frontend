@@ -14,8 +14,8 @@ describe('热门帖子区块', () => {
     const items = await screen.findAllByRole('listitem')
 
     expect(items).toHaveLength(10)
-    expect(items[0]).toHaveTextContent('成都的雨，落进了盖碗茶里')
-    expect(items[1]).toHaveTextContent('外滩的风，从黄昏吹到夜里')
+    expect(items[0]).toHaveTextContent('Chengdu rain, falling into a cup of tea')
+    expect(items[1]).toHaveTextContent('The Bund: wind from dusk into the night')
   })
 
   it('不展示草稿与已删除帖子', async () => {
@@ -23,8 +23,8 @@ describe('热门帖子区块', () => {
 
     await screen.findAllByRole('listitem')
 
-    expect(screen.queryByText('在故宫闭馆前的最后半小时')).not.toBeInTheDocument()
-    expect(screen.queryByText('已删除的旧帖')).not.toBeInTheDocument()
+    expect(screen.queryByText('The last half hour before the Forbidden City closes')).not.toBeInTheDocument()
+    expect(screen.queryByText('A removed old post')).not.toBeInTheDocument()
   })
 
   it('没有帖子时展示空态', async () => {
@@ -32,7 +32,7 @@ describe('热门帖子区块', () => {
 
     render(<HotPosts city="beijing" />)
 
-    expect(await screen.findByText(/还没有帖子/)).toBeInTheDocument()
+    expect(await screen.findByText(/Be the first to ask in Beijing/)).toBeInTheDocument()
   })
 
   it('数据源失败时展示错误态', async () => {
@@ -40,6 +40,6 @@ describe('热门帖子区块', () => {
 
     render(<HotPosts city="all" />)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('热门帖子暂时没能加载出来')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Trending posts could not load')
   })
 })

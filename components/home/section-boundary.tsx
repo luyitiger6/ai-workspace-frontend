@@ -22,7 +22,7 @@ export class SectionBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.failed) {
-      return <SectionError message={`${this.props.title}暂时没能加载出来，稍后再试试。`} />
+      return <SectionError message={`${this.props.title} could not load. Please try again later.`} />
     }
 
     return this.props.children

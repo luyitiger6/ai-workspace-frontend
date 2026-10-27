@@ -42,23 +42,23 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <HomeHero />
 
         <div className={`wc-container ${styles.sections}`}>
-          <SectionBoundary title="功能入口">
+          <SectionBoundary title="Feature entrances">
             <FeatureNav />
           </SectionBoundary>
 
-          <SectionBoundary title="城市入口">
+          <SectionBoundary title="City picker">
             <CitySwitcher activeCity={city} query={query} />
           </SectionBoundary>
 
-          <SectionBoundary title="编辑推荐">
+          <SectionBoundary title="Editor's picks">
             <EditorPicks city={city} />
           </SectionBoundary>
 
-          <SectionBoundary title="热门帖子">
+          <SectionBoundary title="Trending posts">
             <HotPosts city={city} />
           </SectionBoundary>
 
-          <SectionBoundary title="热门景点">
+          <SectionBoundary title="Popular attractions">
             <HotAttractions city={city} />
           </SectionBoundary>
         </div>

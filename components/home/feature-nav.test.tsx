@@ -15,25 +15,25 @@ describe('功能导航栏', () => {
   it('展示旅游社区、景点攻略与 AI 助手三张卡片', () => {
     renderNav()
 
-    expect(screen.getByText('旅游社区')).toBeInTheDocument()
-    expect(screen.getByText('景点攻略')).toBeInTheDocument()
-    expect(screen.getByText('AI 助手')).toBeInTheDocument()
+    expect(screen.getByText('Travel community')).toBeInTheDocument()
+    expect(screen.getByText('Attraction guides')).toBeInTheDocument()
+    expect(screen.getByText('AI assistant')).toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(3)
   })
 
   it('社区与攻略卡片指向各自的入口地址', () => {
     renderNav()
 
-    expect(screen.getByRole('link', { name: /旅游社区/ })).toHaveAttribute('href', '/community')
-    expect(screen.getByRole('link', { name: /景点攻略/ })).toHaveAttribute('href', '/attractions')
+    expect(screen.getByRole('link', { name: /Travel community/ })).toHaveAttribute('href', '/community')
+    expect(screen.getByRole('link', { name: /Attraction guides/ })).toHaveAttribute('href', '/attractions')
   })
 
   it('AI 卡片打开占位面板', () => {
     renderNav()
 
-    fireEvent.click(screen.getByRole('button', { name: /AI 助手/ }))
+    fireEvent.click(screen.getByRole('button', { name: /AI assistant/ }))
 
-    expect(screen.getByRole('dialog', { name: 'AI 旅行助手' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'AI travel assistant' })).toBeInTheDocument()
   })
 
   it('窄视口下三张卡片都保留在文档中，由 CSS 决定堆叠', () => {

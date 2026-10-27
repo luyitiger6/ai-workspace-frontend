@@ -5,22 +5,28 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: {
-    default: 'wanderchain · 把想去的地方走成路线',
+    default: 'wanderchain · Turn a wish into a route',
     template: '%s · wanderchain',
   },
   description:
-    'wanderchain 是一个城市旅行指南：编辑推荐的路线、热门的社区帖子与值得专程前往的景点。',
+    'wanderchain is a city travel guide: routes our editors walked, trending community posts, and places worth a detour.',
   icons: { icon: '/favicon.svg' },
+  openGraph: {
+    title: 'wanderchain · Turn a wish into a route',
+    description:
+      'wanderchain is a city travel guide: routes our editors walked, trending community posts, and places worth a detour.',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <body>
         <a className="wc-skip-link" href="#main-content">
-          跳到主要内容
+          Skip to main content
         </a>
         <AuthProvider>
           <AiAssistantProvider>

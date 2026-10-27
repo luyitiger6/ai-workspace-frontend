@@ -7,6 +7,8 @@ import HomePage from './page'
 
 const replaceMock = vi.hoisted(() => vi.fn())
 
+const HAN = /\p{Script=Han}/u
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: replaceMock }),
 }))
@@ -50,23 +52,23 @@ describe('wanderchain 首页', () => {
 
     await renderHome({ city: 'beijing' })
 
-    expect(screen.getByRole('button', { name: '北京' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Beijing' })).toHaveAttribute('aria-pressed', 'true')
     await waitFor(() => expect(spy).toHaveBeenCalledWith({ city: 'beijing' }))
   })
 
   it('非法城市回归全部', async () => {
     await renderHome({ city: 'atlantis' })
 
-    expect(screen.getByRole('button', { name: '全部' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: '北京' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'All cities' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Beijing' })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('城市切换不影响主视觉', async () => {
     const readHero = () => {
-      const region = screen.getByRole('region', { name: /把想去的地方/ })
+      const region = screen.getByRole('region', { name: /Turn a place you want to see/ })
       return {
         heading: within(region).getByRole('heading', { level: 1 }).textContent,
-        keyword: (within(region).getByLabelText('搜索城市、帖子或景点') as HTMLInputElement).value,
+        keyword: (within(region).getByLabelText('Search cities, posts or attractions') as HTMLInputElement).value,
       }
     }
 
@@ -84,8 +86,15 @@ describe('wanderchain 首页', () => {
 
     await renderHome()
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('编辑推荐暂时没能加载出来')
-    expect(screen.getByRole('heading', { name: '热门帖子' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '热门景点' })).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent("Editor's picks could not load")
+    expect(screen.getByRole('heading', { name: 'Trending posts' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Popular attractions' })).toBeInTheDocument()
+  })
+
+  it('渲染后的可见文本不含中文字符', async () => {
+    const { container } = await renderHome({ city: 'beijing' })
+
+    expect(HAN.test(container.textContent ?? '')).toBe(false)
+    expect(HAN.test(document.body.textContent ?? '')).toBe(false)
   })
 })

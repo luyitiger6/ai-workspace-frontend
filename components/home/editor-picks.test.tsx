@@ -14,15 +14,15 @@ describe('编辑推荐区块', () => {
     const items = await screen.findAllByRole('listitem')
 
     expect(items).toHaveLength(6)
-    expect(items[0]).toHaveTextContent('在故宫的黄昏里走一圈')
-    expect(items[1]).toHaveTextContent('武康路的梧桐与咖啡')
-    expect(items[2]).toHaveTextContent('人民公园的一杯盖碗茶')
+    expect(items[0]).toHaveTextContent('A walk through the Forbidden City at dusk')
+    expect(items[1]).toHaveTextContent('Plane trees and coffee on Wukang Road')
+    expect(items[2]).toHaveTextContent("A gaiwan of tea in People's Park")
   })
 
   it('封面图按响应式档位出图并延迟加载', async () => {
     render(<EditorPicks city="all" />)
 
-    const covers = await screen.findAllByRole('img', { name: /封面$/ })
+    const covers = await screen.findAllByRole('img', { name: / cover$/ })
 
     expect(covers).toHaveLength(6)
 
@@ -48,9 +48,9 @@ describe('编辑推荐区块', () => {
     const items = await screen.findAllByRole('listitem')
 
     expect(items).toHaveLength(2)
-    expect(screen.getByText('在故宫的黄昏里走一圈')).toBeInTheDocument()
-    expect(screen.getByText('七天假期，只带一个背包')).toBeInTheDocument()
-    expect(screen.queryByText('武康路的梧桐与咖啡')).not.toBeInTheDocument()
+    expect(screen.getByText('A walk through the Forbidden City at dusk')).toBeInTheDocument()
+    expect(screen.getByText('Seven days, one backpack')).toBeInTheDocument()
+    expect(screen.queryByText('Plane trees and coffee on Wukang Road')).not.toBeInTheDocument()
   })
 
   it('没有匹配卡片时展示空态', async () => {
@@ -58,7 +58,7 @@ describe('编辑推荐区块', () => {
 
     render(<EditorPicks city="sanya" />)
 
-    expect(await screen.findByText(/还没有编辑精选/)).toBeInTheDocument()
+    expect(await screen.findByText(/No editor's picks in Sanya yet/)).toBeInTheDocument()
   })
 
   it('数据源失败时展示错误态', async () => {
@@ -66,6 +66,6 @@ describe('编辑推荐区块', () => {
 
     render(<EditorPicks city="all" />)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('编辑推荐暂时没能加载出来')
+    expect(await screen.findByRole('alert')).toHaveTextContent("Editor's picks could not load")
   })
 })

@@ -22,7 +22,7 @@ const AiAssistantContext = createContext<AiAssistantContextValue | null>(null)
 export function useAiAssistant(): AiAssistantContextValue {
   const value = useContext(AiAssistantContext)
   if (!value) {
-    throw new Error('useAiAssistant 必须在 AiAssistantProvider 内使用')
+    throw new Error('useAiAssistant must be used inside AiAssistantProvider')
   }
   return value
 }
@@ -142,31 +142,32 @@ export function AiAssistantProvider({ children }: { children: ReactNode }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className={styles.panelHead}>
-              <span className={styles.badge}>即将上线</span>
+              <span className={styles.badge}>Coming soon</span>
               <button
                 ref={closeButtonRef}
                 type="button"
                 className={styles.closeButton}
                 onClick={close}
-                aria-label="关闭 AI 助手"
+                aria-label="Close the AI assistant"
               >
                 ×
               </button>
             </div>
             <h2 id="ai-assistant-title" className={styles.panelTitle}>
-              AI 旅行助手
+              AI travel assistant
             </h2>
             <p className={styles.panelText}>
-              真实对话能力正在接入。之后你可以让它按城市生成行程、比较景点，或者替你算一笔旅行预算。
+              Real conversation is being wired up. Soon you will be able to ask for a city
+              itinerary, compare attractions, or price out a trip.
             </p>
             <ul className={styles.capabilities}>
-              <li>按城市生成三日行程</li>
-              <li>比较景点的适合季节与人流</li>
-              <li>按预算调整住宿与交通</li>
+              <li>Build a three-day itinerary for any city</li>
+              <li>Compare attractions by season and crowds</li>
+              <li>Fit stays and transport to your budget</li>
             </ul>
-            <p className={styles.note}>当前是纯前端占位入口，不会发送任何请求。</p>
+            <p className={styles.note}>This is a front-end placeholder. It sends no requests.</p>
             <button type="button" className="wc-button wc-button--primary" onClick={close}>
-              知道了
+              Got it
             </button>
           </section>
         </div>
@@ -184,13 +185,13 @@ export function AiAssistantTrigger({ variant }: { variant: 'header' | 'floating'
         type="button"
         className={styles.floating}
         onClick={open}
-        aria-label="打开 AI 助手"
+        aria-label="Open the AI assistant"
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         data-testid="ai-floating"
       >
         <SparkIcon />
-        <span className={styles.floatingText}>AI 助手</span>
+        <span className={styles.floatingText}>AI assistant</span>
       </button>
     )
   }
@@ -205,7 +206,7 @@ export function AiAssistantTrigger({ variant }: { variant: 'header' | 'floating'
       data-testid="ai-header"
     >
       <SparkIcon />
-      AI 助手
+      AI assistant
     </button>
   )
 }

@@ -15,17 +15,22 @@ export type ContentStatus = 'published' | 'draft' | 'removed'
 export interface EditorPick {
   id: number
   title: string
+  titleEn: string
   summary: string
+  summaryEn: string
   city: CitySlug
   coverUrl: string
   editor: string
+  editorEn: string
   sortOrder: number
 }
 
 export interface Post {
   id: number
   title: string
+  titleEn: string
   author: string
+  authorEn: string
   city: CitySlug
   status: ContentStatus
   commentCount: number
@@ -36,6 +41,7 @@ export interface Post {
 export interface Attraction {
   id: number
   name: string
+  nameEn: string
   city: CitySlug
   coverUrl: string
   rating: number

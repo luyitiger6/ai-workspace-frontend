@@ -4,8 +4,8 @@ import { AiAssistantTrigger } from '@/components/home/ai-assistant'
 import styles from './site-header.module.css'
 
 const NAV_ITEMS = [
-  { href: '/community', label: '旅游社区' },
-  { href: '/attractions', label: '景点攻略' },
+  { href: '/community', label: 'Travel community' },
+  { href: '/attractions', label: 'Attraction guides' },
 ]
 
 export function SiteHeader() {
@@ -17,7 +17,7 @@ export function SiteHeader() {
           wanderchain
         </Link>
 
-        <nav className={styles.nav} aria-label="主导航">
+        <nav className={styles.nav} aria-label="Main navigation">
           {NAV_ITEMS.map((item) => (
             <Link key={item.href} className={styles.navLink} href={item.href}>
               {item.label}
