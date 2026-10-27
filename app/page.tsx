@@ -1,6 +1,7 @@
 import { CitySwitcher } from '@/components/home/city-switcher'
 import { EditorPicks } from '@/components/home/editor-picks'
 import { FeatureNav } from '@/components/home/feature-nav'
+import { HashAnchorRestorer } from '@/components/home/hash-anchor-restorer'
 import { HomeHero } from '@/components/home/hero'
 import { HotAttractions } from '@/components/home/hot-attractions'
 import { HotPosts } from '@/components/home/hot-posts'
@@ -40,6 +41,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <SiteHeader />
 
       <main id="main-content" className={styles.main}>
+        <HashAnchorRestorer />
         <HomeHero />
 
         <div className={`wc-container ${styles.sections}`}>
