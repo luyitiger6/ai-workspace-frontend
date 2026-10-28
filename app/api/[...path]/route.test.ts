@@ -90,6 +90,35 @@ describe('API 代理', () => {
     expect(await response.text()).toBe('not found')
   })
 
+  it('透传 429 状态、Retry-After 与错误体：限流响应对浏览器仍可解读', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({ code: 'RATE_LIMITED', message: '请求过于频繁，请稍后再试' }),
+        {
+          status: 429,
+          headers: { 'content-type': 'application/json', 'retry-after': '60' },
+        },
+      ),
+    )
+
+    const response = await POST(
+      new Request('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: 'a@example.com', password: 'wrong' }),
+      }),
+      { params: Promise.resolve({ path: ['auth', 'login'] }) },
+    )
+
+    // 同源代理不得把 429 吞成 2xx/502，也不得丢掉 Retry-After（否则客户端不知道该等多久）。
+    expect(response.status).toBe(429)
+    expect(response.headers.get('retry-after')).toBe('60')
+    expect(await response.json()).toEqual({
+      code: 'RATE_LIMITED',
+      message: '请求过于频繁，请稍后再试',
+    })
+  })
+
   it('后端不可达时返回 502', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'))
 

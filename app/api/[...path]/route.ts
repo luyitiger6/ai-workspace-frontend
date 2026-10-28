@@ -45,6 +45,12 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
   if (upstreamContentType) {
     responseHeaders.set('content-type', upstreamContentType)
   }
+  // 429 的 Retry-After 必须一并透传：浏览器直连的是本代理而非后端，
+  // 丢掉这个头，限流响应对客户端就不再可解读（该等多久无从得知）。
+  const upstreamRetryAfter = upstream.headers.get('retry-after')
+  if (upstreamRetryAfter) {
+    responseHeaders.set('retry-after', upstreamRetryAfter)
+  }
 
   return new Response(upstream.body, {
     status: upstream.status,
