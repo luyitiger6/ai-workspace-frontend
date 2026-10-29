@@ -1,0 +1,193 @@
+import { fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { AuthProvider, useAuth } from './auth-provider'
+
+const fetchMock = vi.fn()
+
+const ME_BODY = {
+  publicId: '01JACCOUNT',
+  email: 'a@example.com',
+  displayName: 'Server Name',
+  status: 'active',
+  createdAt: '2026-10-29T03:00:00Z',
+}
+
+const LOGIN_BODY = {
+  publicId: '01JACCOUNT',
+  email: 'a@example.com',
+  displayName: 'Login Response Name',
+  expiresAt: '2026-11-05T03:00:00Z',
+}
+
+const UNAUTHENTICATED = () =>
+  new Response(JSON.stringify({ code: 'UNAUTHENTICATED', message: '未认证' }), {
+    status: 401,
+    headers: { 'content-type': 'application/json' },
+  })
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  })
+}
+
+/** 按 URL 分派响应：认证链路的每个端点在用例里各自表态。 */
+function routeResponses(routes: Record<string, () => Response>) {
+  fetchMock.mockImplementation(async (input: unknown) => {
+    const url = String(input)
+    const handler = routes[url]
+    if (!handler) {
+      throw new TypeError(`unexpected fetch to ${url}`)
+    }
+    return handler()
+  })
+}
+
+function Probe() {
+  const { status, user, login, logout } = useAuth()
+  return (
+    <div>
+      <span data-testid="status">{status}</span>
+      <span data-testid="displayName">{user?.displayName ?? ''}</span>
+      <button
+        type="button"
+        onClick={() => void login({ email: 'a@example.com', password: 'password1' })}
+      >
+        do-login
+      </button>
+      <button type="button" onClick={() => void logout()}>
+        do-logout
+      </button>
+    </div>
+  )
+}
+
+function renderProbe() {
+  return render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  )
+}
+
+describe('会话状态来源', () => {
+  beforeEach(() => {
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    window.localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    window.localStorage.clear()
+  })
+
+  it('首帧是加载态，随后由 GET /me 判定为访客', async () => {
+    routeResponses({ '/api/auth/me': UNAUTHENTICATED })
+
+    renderProbe()
+
+    expect(screen.getByTestId('status')).toHaveTextContent('loading')
+    expect(await screen.findByText('guest')).toBeInTheDocument()
+    expect(screen.getByTestId('displayName')).toHaveTextContent('')
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual(['/api/auth/me'])
+  })
+
+  it('GET /me 返回账户时进入已登录态并展示 displayName', async () => {
+    routeResponses({ '/api/auth/me': () => jsonResponse(ME_BODY) })
+
+    renderProbe()
+
+    expect(await screen.findByText('user')).toBeInTheDocument()
+    expect(screen.getByTestId('displayName')).toHaveTextContent('Server Name')
+  })
+
+  it('GET /me 网络失败归为访客态，不抛未捕获异常', async () => {
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'))
+    const unhandled = vi.fn()
+    process.on('unhandledRejection', unhandled)
+
+    try {
+      renderProbe()
+
+      expect(await screen.findByText('guest')).toBeInTheDocument()
+      expect(unhandled).not.toHaveBeenCalled()
+    } finally {
+      process.off('unhandledRejection', unhandled)
+    }
+  })
+
+  it('登录成功后重新拉 /me：界面显示服务端认定的账户，而不是登录响应里的近似值', async () => {
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/login': () => jsonResponse(LOGIN_BODY),
+    })
+    // 首次探测时还没有会话
+    fetchMock.mockResolvedValueOnce(UNAUTHENTICATED())
+
+    renderProbe()
+    expect(await screen.findByText('guest')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'do-login' }))
+
+    expect(await screen.findByText('user')).toBeInTheDocument()
+    expect(screen.getByTestId('displayName')).toHaveTextContent('Server Name')
+    expect(screen.getByTestId('displayName')).not.toHaveTextContent('Login Response Name')
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      '/api/auth/me',
+      '/api/auth/login',
+      '/api/auth/me',
+    ])
+  })
+
+  it('登录请求体带 credentials，令牌不出现在任何前端状态里', async () => {
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/login': () => jsonResponse(LOGIN_BODY),
+    })
+    fetchMock.mockResolvedValueOnce(UNAUTHENTICATED())
+
+    renderProbe()
+    fireEvent.click(await screen.findByRole('button', { name: 'do-login' }))
+    await screen.findByText('user')
+
+    const [, init] = fetchMock.mock.calls[1] as [string, RequestInit]
+    expect(init.credentials).toBe('same-origin')
+    expect(JSON.parse(String(init.body))).toEqual({
+      email: 'a@example.com',
+      password: 'password1',
+    })
+  })
+
+  it('登出调用后端端点并回到访客态', async () => {
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/logout': () => new Response(null, { status: 204 }),
+    })
+
+    renderProbe()
+    expect(await screen.findByText('user')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'do-logout' }))
+
+    expect(await screen.findByText('guest')).toBeInTheDocument()
+    expect(screen.getByTestId('displayName')).toHaveTextContent('')
+    expect(fetchMock.mock.calls.some(([url]) => String(url) === '/api/auth/logout')).toBe(true)
+  })
+
+  it('整个认证流程不往浏览器可读存储写任何东西', async () => {
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/login': () => jsonResponse(LOGIN_BODY),
+    })
+    fetchMock.mockResolvedValueOnce(UNAUTHENTICATED())
+
+    renderProbe()
+    fireEvent.click(await screen.findByRole('button', { name: 'do-login' }))
+    await screen.findByText('user')
+
+    expect(window.localStorage.length).toBe(0)
+    expect(window.sessionStorage.length).toBe(0)
+  })
+})

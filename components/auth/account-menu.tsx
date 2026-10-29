@@ -21,9 +21,9 @@ export function AccountMenu() {
 
   return (
     <div className={styles.user}>
-      <span className={styles.name}>{user.name}</span>
-      {user.role === 'admin' ? <span className={styles.role}>Editor</span> : null}
-      <button type="button" className={styles.logout} onClick={logout}>
+      {/* 只展示后端契约里真实存在的字段：后端没有角色模型，也就不该有角色徽章。 */}
+      <span className={styles.name}>{user.displayName}</span>
+      <button type="button" className={styles.logout} onClick={() => void logout()}>
         Log out
       </button>
     </div>

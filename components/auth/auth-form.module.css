@@ -48,6 +48,54 @@
   font-size: 13px;
 }
 
+.notice {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(15, 92, 78, 0.08);
+  color: var(--wc-green);
+  font-size: 13px;
+}
+
+.captcha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.captchaImage {
+  border: 1px solid var(--wc-line);
+  border-radius: 12px;
+  background: #fffefb;
+}
+
+.captchaPending {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 48px;
+  border: 1px dashed var(--wc-line);
+  border-radius: 12px;
+  color: var(--wc-muted);
+  font-size: 12px;
+}
+
+.captchaRefresh {
+  border: none;
+  background: none;
+  color: var(--wc-green);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.captchaRefresh:disabled {
+  color: var(--wc-muted);
+  cursor: default;
+}
+
 .switch {
   color: var(--wc-muted);
   font-size: 13px;
@@ -56,9 +104,4 @@
 .switch a {
   color: var(--wc-green);
   font-weight: 600;
-}
-
-.hint {
-  color: var(--wc-muted);
-  font-size: 12px;
 }

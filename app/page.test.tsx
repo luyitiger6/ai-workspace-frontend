@@ -1,5 +1,5 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { AiAssistantProvider } from '@/components/home/ai-assistant'
 import { mockRepository } from '@/lib/home/repository'
@@ -26,8 +26,14 @@ async function renderHome(params: SearchParams = {}) {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   replaceMock.mockClear()
   localStorage.clear()
+})
+
+// 顶栏挂载会探测一次会话（GET /api/auth/me）；首页用例关心的是区块渲染，把它桩成访客态。
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 401 })))
 })
 
 describe('wanderchain 首页', () => {

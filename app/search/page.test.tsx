@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { AiAssistantProvider } from '@/components/home/ai-assistant'
 import SearchPage from './page'
@@ -31,8 +31,15 @@ function groupHeadings(): (string | null)[] {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   replaceMock.mockClear()
   localStorage.clear()
+})
+
+// 顶栏挂载就会探测一次会话（GET /api/auth/me）。这里把它桩成访客态：
+// 搜索结果全部来自同步仓储，本文件要钉的是「页面数据零网络请求」，不是「浏览器一个请求都不发」。
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 401 })))
 })
 
 describe('站内搜索结果页', () => {
@@ -121,7 +128,7 @@ describe('站内搜索结果页', () => {
     expect(within(postGroup).getAllByText(/^Chengdu · /).length).toBe(2)
   })
 
-  it('服务端渲染：唯一 h1、含页头页脚、零 fetch', async () => {
+  it('服务端渲染：唯一 h1、含页头页脚、页面数据零 fetch', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
     await renderSearch({ q: '成都' })
@@ -130,7 +137,10 @@ describe('站内搜索结果页', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Search the site')
     expect(screen.getByRole('banner')).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
-    expect(fetchSpy).not.toHaveBeenCalled()
+    const beyondSessionProbe = fetchSpy.mock.calls.filter(
+      ([url]) => String(url) !== '/api/auth/me',
+    )
+    expect(beyondSessionProbe).toEqual([])
   })
 
   it('英文关键词的结果页不含中文字符', async () => {

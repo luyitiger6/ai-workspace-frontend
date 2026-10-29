@@ -119,6 +119,62 @@ describe('API 代理', () => {
     })
   })
 
+  it('按白名单转发认证相关请求头，白名单外的头不带过去', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true }))
+
+    await POST(
+      new Request('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          cookie: 'wc_session=header.payload.signature',
+          origin: 'http://localhost:3000',
+          referer: 'http://localhost:3000/login',
+          'x-forwarded-for': '203.0.113.9',
+          'x-custom': 'should-not-leak',
+        },
+        body: JSON.stringify({ email: 'a@example.com', password: 'password1' }),
+      }),
+      { params: Promise.resolve({ path: ['auth', 'login'] }) },
+    )
+
+    const forwarded = fetchMock.mock.calls[0][1].headers as Headers
+    // 后端只从 cookie 读令牌、只从 origin / referer 做来源校验，这三个头丢了认证就静默失效。
+    expect(forwarded.get('cookie')).toBe('wc_session=header.payload.signature')
+    expect(forwarded.get('origin')).toBe('http://localhost:3000')
+    expect(forwarded.get('referer')).toBe('http://localhost:3000/login')
+    // 来源必须仍是浏览器直连的 origin：代理不得把客户端 IP 冒充成可信代理链的输入。
+    expect(forwarded.get('x-forwarded-for')).toBeNull()
+    expect(forwarded.get('x-custom')).toBeNull()
+    expect(forwarded.has('host')).toBe(false)
+  })
+
+  it('上游多条 Set-Cookie 逐条回传，不被逗号合并成一条', async () => {
+    const upstream = new Response(JSON.stringify({ publicId: '01J' }), {
+      status: 200,
+      headers: [
+        ['content-type', 'application/json'],
+        ['set-cookie', 'wc_session=header.payload.signature; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax'],
+        ['set-cookie', 'wc_hint=1; Path=/; Max-Age=60'],
+      ],
+    })
+    fetchMock.mockResolvedValue(upstream)
+
+    const response = await POST(
+      new Request('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: 'a@example.com', password: 'password1' }),
+      }),
+      { params: Promise.resolve({ path: ['auth', 'login'] }) },
+    )
+
+    const cookies = response.headers.getSetCookie()
+    expect(cookies).toHaveLength(2)
+    expect(cookies[0]).toBe('wc_session=header.payload.signature; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax')
+    expect(cookies[1]).toBe('wc_hint=1; Path=/; Max-Age=60')
+  })
+
   it('后端不可达时返回 502', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'))
 

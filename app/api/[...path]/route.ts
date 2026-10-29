@@ -1,5 +1,14 @@
 const DEFAULT_BACKEND_URL = 'http://localhost:8989'
 
+/**
+ * 按白名单转发给后端的请求头。
+ *
+ * 这三个头缺任意一个，认证链路都会在端到端上静默失效：cookie 是令牌的唯一载体，
+ * origin 与 referer 是后端来源校验的输入。白名单之外的头一律不转发——
+ * host 尤其不能带过去，否则后端看到的请求主机名来自前端而不是转发目标。
+ */
+const FORWARDED_REQUEST_HEADERS = ['cookie', 'origin', 'referer'] as const
+
 /** 运行期读取后端地址：换后端只需改环境变量并重启进程，无需重建产物 */
 function backendBaseUrl(): string {
   return (process.env.BACKEND_URL ?? DEFAULT_BACKEND_URL).replace(/\/+$/, '')
@@ -21,6 +30,12 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
   const accept = request.headers.get('accept')
   if (accept) {
     headers.set('accept', accept)
+  }
+  for (const name of FORWARDED_REQUEST_HEADERS) {
+    const value = request.headers.get(name)
+    if (value) {
+      headers.set(name, value)
+    }
   }
 
   const method = request.method
@@ -50,6 +65,11 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
   const upstreamRetryAfter = upstream.headers.get('retry-after')
   if (upstreamRetryAfter) {
     responseHeaders.set('retry-after', upstreamRetryAfter)
+  }
+  // Set-Cookie 必须逐条回传：认证令牌只从这个头出去。
+  // 用 get() 取值会把多条 cookie 按逗号合并成一条，属性随之错位，浏览器要么存不下要么存错。
+  for (const setCookie of upstream.headers.getSetCookie()) {
+    responseHeaders.append('set-cookie', setCookie)
   }
 
   return new Response(upstream.body, {
