@@ -106,8 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await logoutRequest()
+    } catch {
+      // 登出失败也照样落到访客态：cookie 归后端管，界面不该留着一个已经登出的账户。
+      // 唯一的生产调用点是 `void logout()`，没有消费 rejection 的通道，所以在这里收敛。
     } finally {
-      // cookie 由后端清除；即便这一步失败，界面也不该继续显示一个已登出的账户。
       setUser(null)
       setStatus('guest')
     }

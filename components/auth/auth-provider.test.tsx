@@ -176,6 +176,47 @@ describe('会话状态来源', () => {
     expect(fetchMock.mock.calls.some(([url]) => String(url) === '/api/auth/logout')).toBe(true)
   })
 
+  it('登出接口返回 500 仍回到访客态，且不产生未处理的 rejection', async () => {
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/logout': () => jsonResponse({ code: 'INTERNAL', message: 'boom' }, 500),
+    })
+    const unhandled = vi.fn()
+    process.on('unhandledRejection', unhandled)
+
+    try {
+      renderProbe()
+      expect(await screen.findByText('user')).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'do-logout' }))
+
+      expect(await screen.findByText('guest')).toBeInTheDocument()
+      expect(screen.getByTestId('displayName')).toHaveTextContent('')
+      // 未捕获的 rejection 要等微任务队列排空才会浮上来。
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(unhandled).not.toHaveBeenCalled()
+    } finally {
+      process.off('unhandledRejection', unhandled)
+    }
+  })
+
+  it('登出请求因网络错误失败同样回到访客态', async () => {
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/logout': () => {
+        throw new TypeError('fetch failed')
+      },
+    })
+
+    renderProbe()
+    expect(await screen.findByText('user')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'do-logout' }))
+
+    expect(await screen.findByText('guest')).toBeInTheDocument()
+    expect(screen.getByTestId('displayName')).toHaveTextContent('')
+  })
+
   it('整个认证流程不往浏览器可读存储写任何东西', async () => {
     routeResponses({
       '/api/auth/me': () => jsonResponse(ME_BODY),

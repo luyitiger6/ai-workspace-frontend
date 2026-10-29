@@ -80,6 +80,15 @@
   font-size: 12px;
 }
 
+/* 换码失败只是提醒，不是本次提交的失败原因，所以用中性色而不是错误色。 */
+.captchaNotice {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(15, 92, 78, 0.06);
+  color: var(--wc-ink-soft);
+  font-size: 12px;
+}
+
 .captchaRefresh {
   border: none;
   background: none;

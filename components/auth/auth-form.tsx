@@ -24,7 +24,16 @@ interface Props {
 /** 注册的两步：先用图形码换邮箱码，再用邮箱码完成注册。 */
 type RegisterStep = 'captcha' | 'code'
 
-const PASSWORD_HINT = `At least ${PASSWORD_MIN_BYTES} characters (up to ${PASSWORD_MAX_BYTES})`
+/** 后端按 UTF-8 字节计长：一个汉字固定 3 字节，字节区间因此能折算成汉字区间。 */
+const BYTES_PER_CJK_CHAR = 3
+/** 下限向上取整：2 个汉字只有 6 字节，达不到 8 字节的下限。 */
+const PASSWORD_MIN_CJK_CHARS = Math.ceil(PASSWORD_MIN_BYTES / BYTES_PER_CJK_CHAR)
+/** 上限向下取整：再多一个汉字就会越过 72 字节的上限。 */
+const PASSWORD_MAX_CJK_CHARS = Math.floor(PASSWORD_MAX_BYTES / BYTES_PER_CJK_CHAR)
+const PASSWORD_HINT = `${PASSWORD_MIN_BYTES}-${PASSWORD_MAX_BYTES} bytes (about ${PASSWORD_MIN_CJK_CHARS}-${PASSWORD_MAX_CJK_CHARS} Chinese characters)`
+
+/** 换码失败只有这一句话：它既不能覆盖真正的失败原因，也不能静默消失。 */
+const CAPTCHA_REFRESH_FAILED = 'Image code refresh failed. Please refresh it manually.'
 
 /**
  * 登录与注册共用一张表单，但两条链路对图形码的态度正好相反：
@@ -51,6 +60,7 @@ export function AuthForm({ mode }: Props) {
   const [step, setStep] = useState<RegisterStep>('captcha')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [captchaNotice, setCaptchaNotice] = useState('')
   const [pending, setPending] = useState(false)
 
   const loadCaptcha = useCallback(async () => {
@@ -58,8 +68,11 @@ export function AuthForm({ mode }: Props) {
       const issued = await fetchCaptcha()
       setCaptcha(issued)
       setCaptchaAnswer('')
-    } catch (cause) {
-      setError(describeAuthError(cause))
+      setCaptchaNotice('')
+    } catch {
+      // 换码是失败处理的附带动作：它自己失败时只提示去手动刷新，不抢走真正的失败原因，
+      // 也不动已有的图形码与答案——用户手里那张未必已经作废。
+      setCaptchaNotice(CAPTCHA_REFRESH_FAILED)
     }
   }, [])
 
@@ -97,6 +110,8 @@ export function AuthForm({ mode }: Props) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    // 上一次刷新失败的提示属于上一次动作，不该跟着这一次提交继续挂着。
+    setCaptchaNotice('')
 
     if (isRegister && step === 'captcha' && password !== confirm) {
       setError('The two passwords do not match')
@@ -124,8 +139,9 @@ export function AuthForm({ mode }: Props) {
       }
     } catch (cause) {
       setError(describeAuthError(cause))
-      // 图形码是一次性的：答错或被要求补码之后，旧的那张必须作废并换新的。
-      if (isCaptchaRequired(cause) || (isRegister && step === 'captcha')) {
+      // 图形码是一次性的：只有后端明确以图形码为由拒绝，才说明这张码已被消费，必须换新的。
+      // 限流与网络错误根本没走到图形码校验，换码只会让用户白输一次答案。
+      if (isCaptchaRequired(cause)) {
         await loadCaptcha()
       }
       setPending(false)
@@ -167,6 +183,11 @@ export function AuthForm({ mode }: Props) {
           Refresh
         </button>
       </div>
+      {captchaNotice ? (
+        <p className={styles.captchaNotice} role="status">
+          {captchaNotice}
+        </p>
+      ) : null}
       <label className={styles.field}>
         <span>Image code</span>
         <input

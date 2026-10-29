@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthApiError } from '@/lib/auth/auth-api'
+import { AuthApiError, AuthNetworkError } from '@/lib/auth/auth-api'
 import { AuthForm } from './auth-form'
 
 const { register, login, replace } = vi.hoisted(() => ({
@@ -104,13 +104,14 @@ describe('登录表单', () => {
     expect(screen.queryByLabelText('Image code')).not.toBeInTheDocument()
   })
 
-  it('密码提示的下限是 8 而不是 6', () => {
+  it('密码提示按字节表述，并附汉字换算示例', () => {
     render(<AuthForm mode="login" />)
 
-    expect(screen.getByLabelText('Password')).toHaveAttribute(
-      'placeholder',
-      'At least 8 characters (up to 72)',
-    )
+    const placeholder = screen.getByLabelText('Password').getAttribute('placeholder') ?? ''
+    expect(placeholder).toContain('8-72 bytes')
+    expect(placeholder).toContain('about 3-24 Chinese characters')
+    // 8 是字节下限，不是字符下限：把下限说成 8 个字符就会误导中文用户。
+    expect(placeholder).not.toContain('8 characters')
   })
 
   it('收到 CAPTCHA_INVALID 才取图形码，重试请求体带上图形码字段', async () => {
@@ -136,6 +137,77 @@ describe('登录表单', () => {
       captchaId: '01JCAPTCHA',
       captchaAnswer: 'a1b2',
     })
+  })
+
+  it('已展示图形码后，429、401 与网络错误都不换码', async () => {
+    login
+      .mockRejectedValueOnce(
+        new AuthApiError('CAPTCHA_INVALID', '图形验证码错误或已过期', 400, null),
+      )
+      .mockRejectedValueOnce(new AuthApiError('RATE_LIMITED', '请求过于频繁', 429, 30))
+      .mockRejectedValueOnce(new AuthApiError('UNAUTHENTICATED', '未认证', 401, null))
+      .mockRejectedValueOnce(new AuthNetworkError())
+
+    render(<AuthForm mode="login" />)
+    fillLogin({ email: 'a@example.com', password: 'password1' })
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+    await screen.findByLabelText('Image code')
+
+    fireEvent.change(screen.getByLabelText('Image code'), { target: { value: 'a1b2' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+    await vi.waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('30 seconds'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+    await vi.waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('The email or password is incorrect.'),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+    await vi.waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Cannot reach the server'),
+    )
+
+    // 这三次失败都没走到图形码校验，码没有被消费就不该换。
+    expect(urls().filter((url) => url === '/api/auth/captcha')).toHaveLength(1)
+    expect(screen.getByLabelText('Image code')).toHaveValue('a1b2')
+  })
+
+  it('换码失败时原始失败原因与刷新失败提示同时可见', async () => {
+    let captchaCalls = 0
+    stubAuthRoutes({
+      captcha: () => {
+        captchaCalls += 1
+        return captchaCalls === 1
+          ? jsonResponse(CAPTCHA_BODY)
+          : jsonResponse({ code: 'INTERNAL', message: 'boom' }, 500)
+      },
+    })
+    login
+      .mockRejectedValueOnce(
+        new AuthApiError('CAPTCHA_INVALID', '图形验证码错误或已过期', 400, null),
+      )
+      .mockRejectedValueOnce(
+        new AuthApiError('CAPTCHA_INVALID', '图形验证码错误或已过期', 400, null),
+      )
+
+    render(<AuthForm mode="login" />)
+    fillLogin({ email: 'a@example.com', password: 'password1' })
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+    await screen.findByLabelText('Image code')
+
+    fireEvent.change(screen.getByLabelText('Image code'), { target: { value: 'zzzz' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+
+    expect(
+      await screen.findByText('Image code refresh failed. Please refresh it manually.'),
+    ).toBeInTheDocument()
+    // 两条信息并存：换码失败不能把登录失败的原因顶掉。
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'The image verification answer is incorrect or has expired.',
+    )
+    // 换码失败也就没换掉码，用户已输入的答案仍然对得上那张图。
+    expect(screen.getByLabelText('Image code')).toHaveValue('zzzz')
   })
 
   it('限流展示 Retry-After 的秒数，且不自动重试', async () => {
@@ -298,6 +370,8 @@ describe('注册表单', () => {
     expect(register).not.toHaveBeenCalled()
     // 进页面取一张、答错后再取一张：图形码是一次性的，旧码必须作废。
     expect(urls().filter((url) => url === '/api/auth/captcha')).toHaveLength(2)
+    // 新码到位后，上一张的答案必须清空。
+    expect(screen.getByLabelText('Image code')).toHaveValue('')
   })
 
   it('换发注册码被限流时展示等待秒数，且不重复发请求', async () => {
@@ -322,6 +396,96 @@ describe('注册表单', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('60 seconds')
     expect(urls().filter((url) => url === '/api/auth/register-code')).toHaveLength(1)
     expect(screen.queryByLabelText('Email code')).not.toBeInTheDocument()
+    // 限流在图形码校验之前就拒了，这张码没被消费，不该换。
+    expect(urls().filter((url) => url === '/api/auth/captcha')).toHaveLength(1)
+  })
+
+  it('注册第一步遇网络错误不换码，保留已输入的答案', async () => {
+    stubAuthRoutes({
+      registerCode: () => {
+        throw new TypeError('fetch failed')
+      },
+    })
+
+    render(<AuthForm mode="register" />)
+    await screen.findByLabelText('Image code')
+    fillRegister({
+      displayName: 'Road Tester',
+      email: 'road@wanderchain.dev',
+      password: 'password1',
+      confirm: 'password1',
+      captchaAnswer: 'a1b2',
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Send email code' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cannot reach the server')
+    expect(urls().filter((url) => url === '/api/auth/captcha')).toHaveLength(1)
+    expect(screen.getByLabelText('Image code')).toHaveValue('a1b2')
+    expect(screen.queryByLabelText('Email code')).not.toBeInTheDocument()
+  })
+
+  it('注册第一步换码失败时保留原始原因与已输入的答案', async () => {
+    let captchaCalls = 0
+    stubAuthRoutes({
+      captcha: () => {
+        captchaCalls += 1
+        return captchaCalls === 1
+          ? jsonResponse(CAPTCHA_BODY)
+          : jsonResponse({ code: 'INTERNAL', message: 'boom' }, 500)
+      },
+      registerCode: () =>
+        jsonResponse({ code: 'CAPTCHA_INVALID', message: '图形验证码错误或已过期' }, 400),
+    })
+
+    render(<AuthForm mode="register" />)
+    await screen.findByLabelText('Image code')
+    fillRegister({
+      displayName: 'Road Tester',
+      email: 'road@wanderchain.dev',
+      password: 'password1',
+      confirm: 'password1',
+      captchaAnswer: 'zzzz',
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Send email code' }))
+
+    expect(
+      await screen.findByText('Image code refresh failed. Please refresh it manually.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'The image verification answer is incorrect or has expired.',
+    )
+    expect(screen.getByLabelText('Image code')).toHaveValue('zzzz')
+    expect(screen.queryByLabelText('Email code')).not.toBeInTheDocument()
+  })
+
+  it('手动刷新失败也提示，刷新成功后提示消失', async () => {
+    let captchaCalls = 0
+    stubAuthRoutes({
+      captcha: () => {
+        captchaCalls += 1
+        if (captchaCalls === 2) {
+          return jsonResponse({ code: 'INTERNAL', message: 'boom' }, 500)
+        }
+        return jsonResponse(CAPTCHA_BODY)
+      },
+    })
+
+    render(<AuthForm mode="register" />)
+    await screen.findByLabelText('Image code')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+    expect(
+      await screen.findByText('Image code refresh failed. Please refresh it manually.'),
+    ).toBeInTheDocument()
+    // 刷新是用户主动发起的动作，它的失败不该写成那次提交的失败原因。
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+    await vi.waitFor(() =>
+      expect(
+        screen.queryByText('Image code refresh failed. Please refresh it manually.'),
+      ).not.toBeInTheDocument(),
+    )
   })
 
   it('提交中按钮禁用且文案为 Working…', async () => {
