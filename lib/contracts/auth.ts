@@ -3,14 +3,15 @@
  *
  * 这里的每一个 interface 都逐字镜像后端的一个出站 DTO（`web/auth/dto/*.java`
  * 与 `common/web/ErrorResponse.java`），字段名与 record 组件名完全相同，两侧一律 camelCase。
- * 一致性不靠人盯：`harness/checks/10-contract-check.ps1` 会解析两侧的字段集合做双向比对，
+ * 一致性不靠人盯：`harness/checks/10-contract-check.ps1` 会解析两侧的字段「名字 + 类型」做双向比对，
  * 后端新增 DTO 而这里没有镜像、这里多写一个后端没有的字段、任何一侧改成蛇形命名、
- * 后端用注解改写 JSON 字段名，闸门都直接非 0 退出。
+ * 后端用注解改写 JSON 字段名、共有字段两侧类型经 Java↔TS 映射表归一后不一致，闸门都直接非 0 退出。
  *
- * 三条不能破的约定：
+ * 类型约定（由闸门按 Java↔TS 映射表强制，不靠人盯）：
  * 1. 时间字段是 ISO-8601 字符串（后端 `Instant` 由 Jackson 序列化而来），不是毫秒数值；
- * 2. 令牌不在任何响应体里，只经 `Set-Cookie` 落到 HttpOnly cookie，所以这里没有 token 字段；
- * 3. 新增字段必须先改后端 DTO，再来这里镜像，顺序反过来闸门就会先红一次——这是设计意图。
+ * 2. 状态字段是小写字面量联合（如 `AccountStatus`，对应后端 `String`），不是枚举对象；
+ * 3. 令牌不在任何响应体里，只经 `Set-Cookie` 落到 HttpOnly cookie，所以这里没有 token 字段；
+ * 4. 新增字段必须先改后端 DTO，再来这里镜像，顺序反过来闸门就会先红一次——这是设计意图。
  */
 
 /** 账户状态，取后端 `AccountStatus.dbValue()` 的小写取值。 */
