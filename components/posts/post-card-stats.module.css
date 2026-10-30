@@ -1,0 +1,18 @@
+.stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--wc-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.value {
+  min-width: 1ch;
+}

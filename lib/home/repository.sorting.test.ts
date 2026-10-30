@@ -41,12 +41,16 @@ const data = vi.hoisted(() => {
     id,
     title: `post-${id}`,
     titleEn: `Post ${id}`,
+    summaryEn: `Summary of post ${id}`,
     author: 'author',
     authorEn: 'Author',
     city,
     status,
+    coverUrl: 'https://example.com/cover.jpg',
     commentCount,
     viewCount,
+    upVoteCount: 0,
+    bookmarkCount: 0,
     publishedAt,
   })
 

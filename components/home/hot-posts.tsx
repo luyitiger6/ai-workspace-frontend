@@ -1,9 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { cityNameEn } from '@/lib/home/cities'
-import { formatCount, formatDate } from '@/lib/home/format'
+import { formatDate } from '@/lib/home/format'
 import { mockRepository } from '@/lib/home/repository'
 import type { CitySlug } from '@/lib/home/types'
+import { PostCardStats } from '@/components/posts/post-card-stats'
 import { EmptyState, SectionError, SectionLoading } from './section-state'
 import { useSectionData } from './use-section-data'
 import styles from './hot-posts.module.css'
@@ -26,7 +28,12 @@ export function HotPosts({ city }: { city: CitySlug }) {
               Trending posts
             </h2>
           </div>
-          <p className="wc-section-note">Ranked by comments, views and publish time.</p>
+          <div className={styles.headActions}>
+            <Link className={styles.viewAll} href="/posts?sortBy=hottest">
+              View all posts
+            </Link>
+            <p className="wc-section-note">Ranked by comments, views and publish time.</p>
+          </div>
         </div>
 
         {state.status === 'loading' ? (
@@ -52,9 +59,11 @@ export function HotPosts({ city }: { city: CitySlug }) {
                     {post.authorEn} · {cityNameEn(post.city)} · {formatDate(post.publishedAt)}
                   </p>
                 </div>
-                <p className={styles.stats}>
-                  {post.commentCount} comments · {formatCount(post.viewCount)} views
-                </p>
+                <PostCardStats
+                  upVoteCount={post.upVoteCount}
+                  commentCount={post.commentCount}
+                  bookmarkCount={post.bookmarkCount}
+                />
               </li>
             ))}
           </ol>

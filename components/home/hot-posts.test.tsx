@@ -78,12 +78,16 @@ describe('热门帖子区块', () => {
       id: 901,
       title: '旧城市残留帖',
       titleEn: 'A stale post from the previous city',
+      summaryEn: 'A stale post that should not replace the new city results.',
       author: '旧',
       authorEn: 'Stale',
       city: 'shanghai',
       status: 'published',
+      coverUrl: 'https://example.com/cover.jpg',
       commentCount: 1,
       viewCount: 1,
+      upVoteCount: 0,
+      bookmarkCount: 0,
       publishedAt: '2026-10-01T00:00:00+08:00',
     }
 
@@ -129,12 +133,16 @@ describe('热门帖子区块', () => {
     expect(items[0].querySelector('div p')).toHaveTextContent('Xiaozhou · Chengdu · Oct 11')
   })
 
-  it('浏览数按千分位格式化', async () => {
+  it('互动统计行展示点赞、评论、收藏计数', async () => {
     render(<HotPosts city="all" />)
 
     const items = await screen.findAllByRole('listitem')
+    const stats = items[0].querySelector('[aria-label="Post interactions"]')
 
-    expect(items[0].querySelectorAll('p')[1]).toHaveTextContent('42 comments · 9,100 views')
+    expect(stats).toBeInTheDocument()
+    expect(stats).toHaveTextContent('245')
+    expect(stats).toHaveTextContent('42')
+    expect(stats).toHaveTextContent('81')
   })
 
   it('计数为 0 时渲染 0 而不是 NaN', async () => {
@@ -142,12 +150,16 @@ describe('热门帖子区块', () => {
       id: 999,
       title: '零评论零浏览的帖子',
       titleEn: 'A post with zero comments and zero views',
+      summaryEn: 'A post used to verify that zero counts render correctly.',
       author: '零',
       authorEn: 'Zero',
       city: 'chengdu',
       status: 'published',
+      coverUrl: 'https://example.com/cover.jpg',
       commentCount: 0,
       viewCount: 0,
+      upVoteCount: 0,
+      bookmarkCount: 0,
       publishedAt: '2026-10-01T10:00:00+08:00',
     }
     vi.spyOn(mockRepository, 'listHotPosts').mockResolvedValueOnce({ items: [zeroViews], total: 1 })
@@ -156,7 +168,24 @@ describe('热门帖子区块', () => {
 
     const items = await screen.findAllByRole('listitem')
 
-    expect(items[0].querySelectorAll('p')[1]).toHaveTextContent('0 comments · 0 views')
+    expect(items[0]).toHaveTextContent('0')
     expect(items[0].textContent).not.toContain('NaN')
+  })
+
+  it('列表项底部展示图标化互动统计行', async () => {
+    render(<HotPosts city="all" />)
+
+    const items = await screen.findAllByRole('listitem')
+    const stats = items[0].querySelector('[aria-label="Post interactions"]')
+
+    expect(stats).toBeInTheDocument()
+  })
+
+  it('区块头部提供 View all posts 链接并按最热排序', async () => {
+    render(<HotPosts city="all" />)
+
+    const link = await screen.findByRole('link', { name: 'View all posts' })
+
+    expect(link).toHaveAttribute('href', '/posts?sortBy=hottest')
   })
 })

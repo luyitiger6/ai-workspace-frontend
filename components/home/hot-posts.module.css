@@ -45,12 +45,23 @@
   font-size: 12.5px;
 }
 
-.stats {
-  flex: none;
-  color: var(--wc-muted);
-  font-size: 12.5px;
-  font-variant-numeric: tabular-nums;
+.headActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.viewAll {
+  color: var(--wc-green);
+  font-size: 14px;
+  font-weight: 600;
   white-space: nowrap;
+}
+
+.viewAll:hover {
+  color: var(--wc-green-dark);
+  text-decoration: underline;
 }
 
 @media (max-width: 900px) {
@@ -60,12 +71,16 @@
 }
 
 @media (max-width: 640px) {
+  .headActions {
+    align-items: flex-start;
+  }
+
   .item {
     flex-wrap: wrap;
     gap: 6px 12px;
   }
 
-  .stats {
+  .item > div:last-child {
     width: 100%;
     padding-left: 42px;
   }

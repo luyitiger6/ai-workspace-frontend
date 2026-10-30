@@ -1,0 +1,37 @@
+.tabs {
+  display: inline-flex;
+  gap: 8px;
+  padding: 4px;
+  background: var(--wc-card);
+  border: 1px solid var(--wc-line);
+  border-radius: 999px;
+}
+
+.tab {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--wc-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.tab:hover {
+  color: var(--wc-ink);
+}
+
+.active {
+  background: var(--wc-green);
+  border-color: var(--wc-green);
+  color: #fff;
+}
+
+.active:hover {
+  color: #fff;
+}

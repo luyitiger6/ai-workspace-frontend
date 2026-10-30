@@ -1,0 +1,54 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--wc-card);
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-md);
+  overflow: hidden;
+}
+
+.cover {
+  aspect-ratio: 3 / 2;
+  background: var(--wc-sand-deep);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+}
+
+.title,
+.summary,
+.summaryShort,
+.meta,
+.stats {
+  border-radius: 4px;
+  background: var(--wc-sand-deep);
+}
+
+.title {
+  height: 22px;
+  width: 80%;
+}
+
+.summary {
+  height: 14px;
+  width: 100%;
+}
+
+.summaryShort {
+  height: 14px;
+  width: 60%;
+}
+
+.meta {
+  height: 12px;
+  width: 40%;
+}
+
+.stats {
+  height: 16px;
+  width: 50%;
+}

@@ -12,6 +12,14 @@ export type CitySlug =
 
 export type ContentStatus = 'published' | 'draft' | 'removed'
 
+export type PostSortBy = 'latest' | 'hottest' | 'mostDiscussed'
+
+export interface PostFeedResult<T> {
+  items: T[]
+  nextCursor: string | null
+  hasMore: boolean
+}
+
 export interface EditorPick {
   id: number
   title: string
@@ -29,12 +37,16 @@ export interface Post {
   id: number
   title: string
   titleEn: string
+  summaryEn: string
   author: string
   authorEn: string
   city: CitySlug
   status: ContentStatus
+  coverUrl: string
   commentCount: number
   viewCount: number
+  upVoteCount: number
+  bookmarkCount: number
   publishedAt: string
 }
 
