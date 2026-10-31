@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -22,10 +23,12 @@ export type AuthStatus = 'loading' | 'guest' | 'user'
 export interface AuthContextValue {
   status: AuthStatus
   user: MeResponse | null
-  login: (input: LoginRequest) => Promise<void>
-  register: (input: RegisterRequest) => Promise<void>
+  login: (input: LoginRequest) => Promise<MeResponse | null>
+  register: (input: RegisterRequest) => Promise<MeResponse | null>
   logout: () => Promise<void>
-  refresh: () => Promise<void>
+  refresh: () => Promise<MeResponse | null>
+  /** 主动登出的事件代次；与 /me 失败归为 guest 区分，供内存草稿清除。 */
+  logoutRevision?: number
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -52,45 +55,35 @@ export function useAuth(): AuthContextValue {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MeResponse | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
+  const [logoutRevision, setLogoutRevision] = useState(0)
 
-  const refresh = useCallback(async () => {
+  const generation = useRef(0)
+  const refresh = useCallback(async (): Promise<MeResponse | null> => {
+    const current = ++generation.current
+    setStatus('loading')
+    let account: MeResponse | null = null
     try {
-      const account = await fetchCurrentAccount()
-      setUser(account)
-      setStatus(account ? 'user' : 'guest')
+      account = await fetchCurrentAccount()
     } catch {
-      setUser(null)
-      setStatus('guest')
+      // 全局失败仍归 guest；返回 null 让表单区分写成功与会话未确认。
     }
+    if (current !== generation.current) return null
+    setUser(account)
+    setStatus(account ? 'user' : 'guest')
+    return account
   }, [])
 
   useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const account = await fetchCurrentAccount()
-        if (cancelled) {
-          return
-        }
-        setUser(account)
-        setStatus(account ? 'user' : 'guest')
-      } catch {
-        if (cancelled) {
-          return
-        }
-        setUser(null)
-        setStatus('guest')
-      }
-    })()
+    void refresh()
     return () => {
-      cancelled = true
+      generation.current += 1
     }
-  }, [])
+  }, [refresh])
 
   const login = useCallback(
     async (input: LoginRequest) => {
       await loginRequest(input)
-      await refresh()
+      return refresh()
     },
     [refresh],
   )
@@ -98,12 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(
     async (input: RegisterRequest) => {
       await registerAccount(input)
-      await refresh()
+      return refresh()
     },
     [refresh],
   )
 
   const logout = useCallback(async () => {
+    generation.current += 1
+    setLogoutRevision(value => value + 1)
+    setUser(null)
+    setStatus('loading')
     try {
       await logoutRequest()
     } catch {
@@ -116,8 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ status, user, login, register, logout, refresh }),
-    [status, user, login, register, logout, refresh],
+    () => ({ status, user, login, register, logout, refresh, logoutRevision }),
+    [status, user, login, register, logout, refresh, logoutRevision],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { AuthForm } from '@/components/auth/auth-form'
 import styles from '../auth.module.css'
 
@@ -20,7 +21,9 @@ export default function RegisterPage() {
           <p className={styles.quoteNote}>Signing up only needs an email, a username and a password.</p>
         </aside>
         <div className={styles.panel}>
-          <AuthForm mode="register" />
+          <Suspense fallback={<p role="status">Loading sign-up form…</p>}>
+            <AuthForm mode="register" />
+          </Suspense>
         </div>
       </div>
     </main>

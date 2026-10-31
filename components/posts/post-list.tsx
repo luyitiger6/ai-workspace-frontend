@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import type { Post } from '@/lib/home/types'
+import type { PostSortBy, PostSummary } from '@/lib/posts/types'
 import { PostCard } from './post-card'
 import { PostCardSkeleton } from './post-card-skeleton'
 import styles from './post-list.module.css'
 
 export interface PostListProps {
-  items: Post[]
+  items: PostSummary[]
+  sortBy: PostSortBy
   isLoadingMore: boolean
   hasMore: boolean
   loadMoreError: boolean
@@ -17,6 +18,7 @@ export interface PostListProps {
 
 export function PostList({
   items,
+  sortBy,
   isLoadingMore,
   hasMore,
   loadMoreError,
@@ -34,7 +36,7 @@ export function PostList({
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
-        if (entry.isIntersecting && !isLoadingMore && hasMore && !loadMoreError) {
+        if (entry?.isIntersecting && !isLoadingMore && hasMore && !loadMoreError) {
           onLoadMore()
         }
       },
@@ -47,7 +49,7 @@ export function PostList({
     }
   }, [isLoadingMore, hasMore, loadMoreError, onLoadMore])
 
-  if (items.length === 0 && !isLoadingMore) {
+  if (items.length === 0 && !isLoadingMore && !hasMore && !loadMoreError) {
     return (
       <div className={styles.empty}>
         <p>No posts yet.</p>
@@ -60,8 +62,8 @@ export function PostList({
     <div className={styles.wrapper}>
       <ul className={styles.list} aria-label="Post feed">
         {items.map((post) => (
-          <li key={post.id}>
-            <PostCard post={post} />
+          <li key={post.publicId}>
+            <PostCard post={post} sortBy={sortBy} />
           </li>
         ))}
         {isLoadingMore
@@ -82,7 +84,9 @@ export function PostList({
         </div>
       ) : null}
 
-      {hasMore && !loadMoreError ? <div ref={sentinelRef} className={styles.sentinel} /> : null}
+      {hasMore && !loadMoreError ? (
+        <div ref={sentinelRef} className={styles.sentinel} data-testid="post-feed-sentinel" />
+      ) : null}
 
       {!hasMore && items.length > 0 ? (
         <p className={styles.end} role="status">

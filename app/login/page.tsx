@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { AuthForm } from '@/components/auth/auth-form'
 import styles from '../auth.module.css'
 
@@ -20,7 +21,9 @@ export default function LoginPage() {
           <p className={styles.quoteNote}>Log in to save routes and publish posts.</p>
         </aside>
         <div className={styles.panel}>
-          <AuthForm mode="login" />
+          <Suspense fallback={<p role="status">Loading sign-in form…</p>}>
+            <AuthForm mode="login" />
+          </Suspense>
         </div>
       </div>
     </main>

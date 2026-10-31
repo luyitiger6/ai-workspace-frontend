@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider, useAuth } from './auth-provider'
 
@@ -33,7 +34,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 /** 按 URL 分派响应：认证链路的每个端点在用例里各自表态。 */
-function routeResponses(routes: Record<string, () => Response>) {
+function routeResponses(routes: Record<string, () => Response | Promise<Response>>) {
   fetchMock.mockImplementation(async (input: unknown) => {
     const url = String(input)
     const handler = routes[url]
@@ -45,17 +46,22 @@ function routeResponses(routes: Record<string, () => Response>) {
 }
 
 function Probe() {
-  const { status, user, login, logout } = useAuth()
+  const { status, user, login, register, logout, refresh } = useAuth()
+  const [result, setResult] = useState('pending')
+  const report = (account: Awaited<ReturnType<typeof refresh>>) => setResult(JSON.stringify(account))
   return (
     <div>
       <span data-testid="status">{status}</span>
       <span data-testid="displayName">{user?.displayName ?? ''}</span>
+      <span data-testid="result">{result}</span>
       <button
         type="button"
-        onClick={() => void login({ email: 'a@example.com', password: 'password1' })}
+        onClick={() => void login({ email: 'a@example.com', password: 'password1' }).then(report)}
       >
         do-login
       </button>
+      <button type="button" onClick={() => void refresh().then(report)}>do-refresh</button>
+      <button type="button" onClick={() => void register({ email: 'a@example.com', password: 'password1', displayName: 'Submitted Name', code: '654321' }).then(report)}>do-register</button>
       <button type="button" onClick={() => void logout()}>
         do-logout
       </button>
@@ -230,5 +236,88 @@ describe('会话状态来源', () => {
 
     expect(window.localStorage.length).toBe(0)
     expect(window.sessionStorage.length).toBe(0)
+  })
+
+  it.each(['login', 'register'] as const)('%s 返回的确认结果来自 /me，而不是写响应', async (mode) => {
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      [`/api/auth/${mode}`]: () => jsonResponse(LOGIN_BODY, mode === 'register' ? 201 : 200),
+    })
+    fetchMock.mockResolvedValueOnce(UNAUTHENTICATED())
+    renderProbe()
+    await screen.findByText('guest')
+    fireEvent.click(screen.getByRole('button', { name: `do-${mode}` }))
+    await vi.waitFor(() => expect(screen.getByTestId('result')).toHaveTextContent(JSON.stringify(ME_BODY)))
+    expect(screen.getByTestId('status')).toHaveTextContent('user')
+    expect(screen.getByTestId('displayName')).toHaveTextContent('Server Name')
+  })
+
+  it.each([
+    ['login', '401'], ['register', '401'], ['login', '500'], ['register', '500'],
+    ['login', 'network'], ['register', 'network'],
+  ] as const)('%s 写成功但 /me %s 时返回 null；重试只读 /me', async (mode, failure) => {
+    let confirmed = false
+    routeResponses({
+      '/api/auth/me': () => {
+        if (confirmed) return jsonResponse(ME_BODY)
+        if (failure === 'network') throw new TypeError('offline')
+        return failure === '401' ? UNAUTHENTICATED() : jsonResponse({ code: 'INTERNAL' }, 500)
+      },
+      [`/api/auth/${mode}`]: () => jsonResponse(LOGIN_BODY, mode === 'register' ? 201 : 200),
+    })
+    fetchMock.mockResolvedValueOnce(UNAUTHENTICATED())
+    renderProbe()
+    await screen.findByText('guest')
+    fireEvent.click(screen.getByRole('button', { name: `do-${mode}` }))
+    await vi.waitFor(() => expect(screen.getByTestId('result')).toHaveTextContent('null'))
+    expect(screen.getByTestId('status')).toHaveTextContent('guest')
+    expect(screen.getByTestId('displayName')).toHaveTextContent('')
+    confirmed = true
+    fireEvent.click(screen.getByRole('button', { name: 'do-refresh' }))
+    await screen.findByText('user')
+    expect(screen.getByTestId('result')).toHaveTextContent(JSON.stringify(ME_BODY))
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      '/api/auth/me', `/api/auth/${mode}`, '/api/auth/me', '/api/auth/me',
+    ])
+  })
+
+  it('新会话确认后迟到的初始 /me 不覆盖账户', async () => {
+    let finish!: (response: Response) => void
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/login': () => jsonResponse(LOGIN_BODY),
+    })
+    fetchMock.mockReturnValueOnce(new Promise<Response>(resolve => { finish = resolve }))
+    renderProbe()
+    fireEvent.click(screen.getByRole('button', { name: 'do-login' }))
+    await screen.findByText('user')
+    await act(async () => finish(UNAUTHENTICATED()))
+    expect(screen.getByTestId('status')).toHaveTextContent('user')
+    expect(screen.getByTestId('displayName')).toHaveTextContent('Server Name')
+  })
+
+  it('较新的 refresh 优先，登出后迟到读取不恢复账户', async () => {
+    let finishOld!: (response: Response) => void
+    let finishLogoutRead!: (response: Response) => void
+    routeResponses({
+      '/api/auth/me': () => jsonResponse(ME_BODY),
+      '/api/auth/logout': () => new Response(null, { status: 204 }),
+    })
+    renderProbe()
+    await screen.findByText('user')
+    fetchMock.mockReturnValueOnce(new Promise<Response>(resolve => { finishOld = resolve }))
+    fireEvent.click(screen.getByRole('button', { name: 'do-refresh' }))
+    fireEvent.click(screen.getByRole('button', { name: 'do-refresh' }))
+    await screen.findByText('user')
+    await act(async () => finishOld(jsonResponse({ ...ME_BODY, displayName: 'Old account' })))
+    expect(screen.getByTestId('displayName')).toHaveTextContent('Server Name')
+    fetchMock.mockReturnValueOnce(new Promise<Response>(resolve => { finishLogoutRead = resolve }))
+    fireEvent.click(screen.getByRole('button', { name: 'do-refresh' }))
+    fireEvent.click(screen.getByRole('button', { name: 'do-logout' }))
+    await screen.findByText('guest')
+    await act(async () => finishLogoutRead(jsonResponse(ME_BODY)))
+    expect(screen.getByTestId('status')).toHaveTextContent('guest')
+    expect(screen.getByTestId('displayName')).toHaveTextContent('')
+    expect(screen.getByTestId('result')).toHaveTextContent('null')
   })
 })

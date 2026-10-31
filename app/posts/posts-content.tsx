@@ -1,12 +1,11 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useMemo } from 'react'
 import { PostList } from '@/components/posts/post-list'
 import { SortTabs } from '@/components/posts/sort-tabs'
 import { useInfinitePosts } from '@/components/posts/use-infinite-posts'
-import { mockRepository } from '@/lib/home/repository'
-import type { PostSortBy } from '@/lib/home/types'
+import { postsApi } from '@/lib/posts/posts-api'
+import type { PostSortBy } from '@/lib/posts/types'
 import styles from './page.module.css'
 
 const DEFAULT_SORT_BY: PostSortBy = 'latest'
@@ -22,13 +21,7 @@ export function PostsContent() {
   const searchParams = useSearchParams()
   const sortBy = parseSortBy(searchParams.get('sortBy'))
 
-  const load = useMemo(
-    () => (currentSortBy: PostSortBy, cursor: string | null) =>
-      mockRepository.feedPosts(currentSortBy, cursor),
-    [],
-  )
-
-  const { state, loadMore, retry } = useInfinitePosts({ sortBy, load })
+  const { state, loadMore, retry } = useInfinitePosts({ sortBy, load: postsApi.feed })
 
   return (
     <main id="main-content" className={styles.main}>
@@ -59,6 +52,7 @@ export function PostsContent() {
         {state.status === 'ready' ? (
           <PostList
             items={state.items}
+            sortBy={sortBy}
             isLoadingMore={state.isLoadingMore}
             hasMore={state.hasMore}
             loadMoreError={state.loadMoreError}

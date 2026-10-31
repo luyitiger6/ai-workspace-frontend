@@ -6,10 +6,13 @@
   border-radius: var(--wc-radius-md);
   box-shadow: var(--wc-shadow);
   overflow: hidden;
+  min-inline-size: 0;
 }
 
 .cover {
   position: relative;
+  display: grid;
+  place-items: center;
   aspect-ratio: 3 / 2;
   overflow: hidden;
   background: var(--wc-sand-deep);
@@ -35,14 +38,59 @@
   line-height: 1.3;
 }
 
-.summary {
-  color: var(--wc-ink-soft);
+.title a {
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.title a:hover {
+  text-decoration: underline;
+}
+
+.title a:focus-visible,
+.author summary:focus-visible {
+  outline: 2px solid var(--wc-green);
+  outline-offset: 4px;
+}
+
+.coverPlaceholder {
+  color: var(--wc-muted);
   font-size: 14px;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tags li {
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-sm);
+  color: var(--wc-ink-soft);
+  font-size: 12px;
+  padding: 3px 8px;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.author {
+  color: var(--wc-muted);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.author summary {
+  cursor: pointer;
+}
+
+.author p {
+  margin-top: 6px;
+  color: var(--wc-ink-soft);
 }
 
 .meta {

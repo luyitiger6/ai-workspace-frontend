@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import type { PostSortBy } from '@/lib/home/types'
+import type { PostSortBy } from '@/lib/posts/types'
 import styles from './sort-tabs.module.css'
 
 export const SORT_OPTIONS: { value: PostSortBy; label: string }[] = [

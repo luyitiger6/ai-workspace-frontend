@@ -48,6 +48,9 @@ export interface PostResponse {
   authorPublicId: string
   createdAt: string
   updatedAt: string
+  commentCount: number
+  upVoteCount: number
+  bookmarkCount: number
 }
 
 /** GET /api/posts 列表中的单项。 */
@@ -118,6 +121,12 @@ export interface BookmarkResponse {
   updatedAt: string
 }
 
+/** GET /api/posts/{publicId}/interactions/me 的本人状态响应。 */
+export interface PostInteractionStateResponse {
+  voteDirection: 'up' | 'down' | null
+  bookmarked: boolean
+}
+
 /** 帖子端点路径，一律走同源 `/api` 代理，前端不直连后端主机。 */
 export const POST_ENDPOINTS = {
   create: '/api/posts',
@@ -129,4 +138,5 @@ export const POST_ENDPOINTS = {
   comment: (publicId: string, commentPublicId: string) => `/api/posts/${publicId}/comments/${commentPublicId}`,
   votes: (publicId: string) => `/api/posts/${publicId}/votes`,
   bookmarks: (publicId: string) => `/api/posts/${publicId}/bookmarks`,
+  myInteractions: (publicId: string) => `/api/posts/${publicId}/interactions/me`,
 } as const

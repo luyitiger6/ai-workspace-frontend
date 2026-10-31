@@ -2,24 +2,33 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthApiError, AuthNetworkError } from '@/lib/auth/auth-api'
 import { AuthForm } from './auth-form'
+import type { MeResponse } from '@/lib/contracts/auth'
 
-const { register, login, replace } = vi.hoisted(() => ({
+const { register, login, refresh, replace, query } = vi.hoisted(() => ({
   register: vi.fn(),
   login: vi.fn(),
+  refresh: vi.fn(),
   replace: vi.fn(),
+  query: { value: '' },
 }))
 
 vi.mock('./auth-provider', () => ({
-  useAuth: () => ({ register, login }),
+  useAuth: () => ({ register, login, refresh }),
 }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace }),
+  useSearchParams: () => new URLSearchParams(query.value),
 }))
 
 const fetchMock = vi.fn()
 
 const CAPTCHA_BODY = { captchaId: '01JCAPTCHA', image: 'data:image/png;base64,AAA' }
+const ACCOUNT: MeResponse = {
+  publicId: '01ARZ3NDEKTSV4RRFFQ69G5FAV', email: 'a@example.com',
+  displayName: 'Confirmed account', status: 'active', createdAt: '2026-10-30T00:00:00Z',
+}
+const TARGET = '/posts/01ARZ3NDEKTSV4RRFFQ69G5FAV'
 
 function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -81,6 +90,8 @@ beforeEach(() => {
   register.mockReset()
   login.mockReset()
   replace.mockReset()
+  refresh.mockReset()
+  query.value = ''
   fetchMock.mockReset()
   vi.stubGlobal('fetch', fetchMock)
   stubAuthRoutes()
@@ -92,7 +103,7 @@ afterEach(() => {
 
 describe('登录表单', () => {
   it('凭证正确直接登录，全程不请求图形码端点', async () => {
-    login.mockResolvedValue(undefined)
+    login.mockResolvedValue(ACCOUNT)
 
     render(<AuthForm mode="login" />)
     fillLogin({ email: 'a@example.com', password: 'password1' })
@@ -117,7 +128,7 @@ describe('登录表单', () => {
   it('收到 CAPTCHA_INVALID 才取图形码，重试请求体带上图形码字段', async () => {
     login
       .mockRejectedValueOnce(new AuthApiError('CAPTCHA_INVALID', '图形验证码错误或已过期', 400, null))
-      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(ACCOUNT)
 
     render(<AuthForm mode="login" />)
     fillLogin({ email: 'a@example.com', password: 'wrong123' })
@@ -295,7 +306,7 @@ describe('注册表单', () => {
   })
 
   it('第一步成功换发邮箱码后进入第二步，注册码端点只发一次', async () => {
-    register.mockResolvedValue(undefined)
+    register.mockResolvedValue(ACCOUNT)
 
     render(<AuthForm mode="register" />)
     await screen.findByLabelText('Image code')
@@ -322,7 +333,7 @@ describe('注册表单', () => {
   })
 
   it('第二步提交注册，请求体四个字段取自契约，成功后离开注册页', async () => {
-    register.mockResolvedValue(undefined)
+    register.mockResolvedValue(ACCOUNT)
 
     render(<AuthForm mode="register" />)
     await screen.findByLabelText('Image code')
@@ -491,8 +502,8 @@ describe('注册表单', () => {
   it('提交中按钮禁用且文案为 Working…', async () => {
     let finish: () => void = () => undefined
     register.mockReturnValue(
-      new Promise<void>((resolve) => {
-        finish = resolve
+      new Promise<MeResponse>((resolve) => {
+        finish = () => resolve(ACCOUNT)
       }),
     )
 
@@ -515,5 +526,89 @@ describe('注册表单', () => {
     await act(async () => {
       finish()
     })
+  })
+})
+
+describe('安全回跳与认证写后确认', () => {
+  it.each(['login', 'register'] as const)('%s 互转只保留合法详情目标', async (mode) => {
+    query.value = new URLSearchParams({ next: TARGET }).toString()
+    render(<AuthForm mode={mode} />)
+    const link = screen.getByRole('link', { name: mode === 'login' ? 'Create one' : 'Log in' })
+    const href = new URL(link.getAttribute('href')!, 'http://localhost')
+    expect(href.pathname).toBe(mode === 'login' ? '/register' : '/login')
+    expect(href.searchParams.get('next')).toBe(TARGET)
+    if (mode === 'register') await screen.findByLabelText('Image code')
+  })
+
+  it.each([
+    ['合法目标', TARGET, TARGET],
+    ['外链', 'https://evil.test', '/'],
+    ['协议相对', '//evil.test', '/'],
+    ['反斜杠', '\\evil.test', '/'],
+    ['重复编码', encodeURIComponent(TARGET), '/'],
+    ['带查询', TARGET + '?account=other', '/'],
+    ['非法标识', '/posts/not-an-id', '/'],
+  ])('%s 只在确认账户后导航', async (_name, next, expected) => {
+    query.value = new URLSearchParams({ next }).toString()
+    login.mockResolvedValue(ACCOUNT)
+    render(<AuthForm mode="login" />)
+    const href = screen.getByRole('link', { name: 'Create one' }).getAttribute('href')!
+    if (expected === '/') expect(href).toBe('/register')
+    fillLogin({ email: 'a@example.com', password: 'password1' })
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }))
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith(expected))
+    expect(login).toHaveBeenCalledTimes(1)
+    expect(refresh).not.toHaveBeenCalled()
+    expect(urls()).toEqual([])
+  })
+
+  it.each(['login', 'register'] as const)('%s 写成功但未确认时只重试读取，不重发写入', async (mode) => {
+    query.value = new URLSearchParams({ next: TARGET }).toString()
+    login.mockResolvedValue(null)
+    register.mockResolvedValue(null)
+    refresh.mockResolvedValueOnce(null).mockResolvedValueOnce(ACCOUNT)
+    render(<AuthForm mode={mode} />)
+    if (mode === 'register') {
+      await screen.findByLabelText('Image code')
+      fillRegister({ displayName: 'Road Tester', email: 'a@example.com', password: 'password1', confirm: 'password1', captchaAnswer: 'a1b2' })
+      fireEvent.click(screen.getByRole('button', { name: 'Send email code' }))
+      fireEvent.change(await screen.findByLabelText('Email code'), { target: { value: '654321' } })
+    } else {
+      fillLogin({ email: 'a@example.com', password: 'password1' })
+    }
+    fireEvent.click(screen.getByRole('button', { name: mode === 'login' ? 'Log in' : 'Sign up and log in' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('session could not be confirmed')
+    expect(replace).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry session check' }))
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+    expect(await screen.findByRole('button', { name: 'Retry session check' })).toBeEnabled()
+    expect(replace).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry session check' }))
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith(TARGET))
+    expect(refresh).toHaveBeenCalledTimes(2)
+    expect(mode === 'login' ? login : register).toHaveBeenCalledTimes(1)
+    expect(mode === 'login' ? register : login).not.toHaveBeenCalled()
+    expect(urls().filter(url => url === '/api/auth/register-code')).toHaveLength(mode === 'register' ? 1 : 0)
+  })
+
+  it('等待写入或会话重试期间连续 submit 只发一次', async () => {
+    let finishLogin!: (account: MeResponse | null) => void
+    let finishRefresh!: (account: MeResponse | null) => void
+    login.mockReturnValue(new Promise(resolve => { finishLogin = resolve }))
+    refresh.mockReturnValue(new Promise(resolve => { finishRefresh = resolve }))
+    render(<AuthForm mode="login" />)
+    fillLogin({ email: 'a@example.com', password: 'password1' })
+    const form = screen.getByRole('button', { name: 'Log in' }).closest('form')!
+    fireEvent.submit(form)
+    fireEvent.submit(form)
+    expect(login).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'Working…' })).toBeDisabled()
+    await act(async () => finishLogin(null))
+    fireEvent.submit(form)
+    fireEvent.submit(form)
+    expect(refresh).toHaveBeenCalledTimes(1)
+    await act(async () => finishRefresh(ACCOUNT))
+    expect(login).toHaveBeenCalledTimes(1)
+    expect(replace).toHaveBeenCalledWith('/')
   })
 })

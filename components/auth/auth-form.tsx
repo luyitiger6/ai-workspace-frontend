@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   describeAuthError,
   fetchCaptcha,
@@ -14,6 +14,8 @@ import {
   PASSWORD_MIN_BYTES,
   type CaptchaResponse,
 } from '@/lib/contracts/auth'
+import { authHref, safeReturnTo } from '@/lib/auth/return-to'
+import type { MeResponse } from '@/lib/contracts/auth'
 import { useAuth } from './auth-provider'
 import styles from './auth-form.module.css'
 
@@ -47,8 +49,10 @@ const CAPTCHA_REFRESH_FAILED = 'Image code refresh failed. Please refresh it man
  */
 export function AuthForm({ mode }: Props) {
   const isRegister = mode === 'register'
-  const { login, register } = useAuth()
+  const { login, register, refresh } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const next = safeReturnTo(searchParams.get('next'))
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -62,6 +66,8 @@ export function AuthForm({ mode }: Props) {
   const [notice, setNotice] = useState('')
   const [captchaNotice, setCaptchaNotice] = useState('')
   const [pending, setPending] = useState(false)
+  const [sessionPending, setSessionPending] = useState(false)
+  const submitting = useRef(false)
 
   const loadCaptcha = useCallback(async () => {
     try {
@@ -83,13 +89,23 @@ export function AuthForm({ mode }: Props) {
     }
   }, [isRegister, loadCaptcha])
 
+  function confirmSession(account: MeResponse | null) {
+    setSessionPending(true)
+    if (account) {
+      router.replace(next ?? '/')
+    } else {
+      setError('Authentication succeeded, but your session could not be confirmed. Retry session check.')
+      setPending(false)
+    }
+  }
+
   async function submitLogin() {
-    await login({
+    const account = await login({
       email,
       password,
       ...(captcha ? { captchaId: captcha.captchaId, captchaAnswer } : {}),
     })
-    router.replace('/')
+    confirmSession(account)
   }
 
   async function submitRegisterCode() {
@@ -103,12 +119,24 @@ export function AuthForm({ mode }: Props) {
   }
 
   async function submitRegister() {
-    await register({ email, code, password, displayName })
-    router.replace('/')
+    const account = await register({ email, code, password, displayName })
+    confirmSession(account)
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting.current) return
+    if (sessionPending) {
+      submitting.current = true
+      setPending(true)
+      setError('')
+      try {
+        confirmSession(await refresh())
+      } finally {
+        submitting.current = false
+      }
+      return
+    }
     setError('')
     // 上一次刷新失败的提示属于上一次动作，不该跟着这一次提交继续挂着。
     setCaptchaNotice('')
@@ -125,6 +153,7 @@ export function AuthForm({ mode }: Props) {
       return
     }
 
+    submitting.current = true
     setPending(true)
     try {
       if (!isRegister) {
@@ -145,12 +174,16 @@ export function AuthForm({ mode }: Props) {
         await loadCaptcha()
       }
       setPending(false)
+    } finally {
+      submitting.current = false
     }
   }
 
   const submitLabel = pending
     ? 'Working…'
-    : !isRegister
+    : sessionPending
+      ? 'Retry session check'
+      : !isRegister
       ? 'Log in'
       : step === 'captcha'
         ? 'Send email code'
@@ -178,7 +211,7 @@ export function AuthForm({ mode }: Props) {
           type="button"
           className={styles.captchaRefresh}
           onClick={() => void loadCaptcha()}
-          disabled={pending}
+          disabled={pending || sessionPending}
         >
           Refresh
         </button>
@@ -325,11 +358,11 @@ export function AuthForm({ mode }: Props) {
       <p className={styles.switch}>
         {isRegister ? (
           <>
-            Already have an account? <Link href="/login">Log in</Link>
+            Already have an account? <Link href={authHref('login', next)}>Log in</Link>
           </>
         ) : (
           <>
-            No account yet? <Link href="/register">Create one</Link>
+            No account yet? <Link href={authHref('register', next)}>Create one</Link>
           </>
         )}
       </p>
