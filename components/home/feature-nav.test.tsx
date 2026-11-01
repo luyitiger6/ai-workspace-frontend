@@ -1,12 +1,13 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { CitySlug } from '@/lib/home/types'
 import { AiAssistantProvider } from './ai-assistant'
 import { FeatureNav } from './feature-nav'
 
-function renderNav() {
+function renderNav(city: CitySlug = 'all') {
   return render(
     <AiAssistantProvider>
-      <FeatureNav />
+      <FeatureNav city={city} />
     </AiAssistantProvider>,
   )
 }
@@ -67,6 +68,25 @@ describe('功能导航栏', () => {
     renderNav()
 
     expect(screen.getByRole('link', { name: /Travel community/ })).toHaveAttribute('href', '/community')
+    expect(screen.getByRole('link', { name: /Attraction guides/ })).toHaveAttribute('href', '/attractions')
+  })
+
+  it('选定城市时攻略入口携带该城市，全部城市时不带参数', () => {
+    const { unmount } = renderNav('beijing')
+
+    expect(screen.getByRole('link', { name: /Attraction guides/ })).toHaveAttribute(
+      'href',
+      '/attractions?city=beijing',
+    )
+    // 城市只作用于景点攻略入口，社区入口保持稳定地址。
+    expect(screen.getByRole('link', { name: /Travel community/ })).toHaveAttribute(
+      'href',
+      '/community',
+    )
+
+    unmount()
+    renderNav('all')
+
     expect(screen.getByRole('link', { name: /Attraction guides/ })).toHaveAttribute('href', '/attractions')
   })
 

@@ -30,15 +30,17 @@ function expectSiteChrome() {
   expect(document.getElementById('main-content')).not.toBeNull()
 }
 
-describe('占位页带上站点框架', () => {
+describe('板块页带上站点框架', () => {
   it('/community 同时渲染顶栏、页脚与 main-content', () => {
     renderPage(<CommunityPage />)
 
     expectSiteChrome()
   })
 
-  it('/attractions 同时渲染顶栏、页脚与 main-content', () => {
-    renderPage(<AttractionsPage />)
+  // 景点页已从占位页换成真实页面：它需要 searchParams，其余断言与其它板块页一致。
+  it('/attractions 同时渲染顶栏、页脚与 main-content', async () => {
+    const ui = await AttractionsPage({ searchParams: Promise.resolve({}) })
+    renderPage(ui)
 
     expectSiteChrome()
   })

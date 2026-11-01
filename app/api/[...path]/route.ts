@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_URL = 'http://localhost:8989'
+import { backendBaseUrl } from '@/lib/backend-url'
 
 /**
  * 按白名单转发给后端的请求头。
@@ -8,11 +8,6 @@ const DEFAULT_BACKEND_URL = 'http://localhost:8989'
  * host 尤其不能带过去，否则后端看到的请求主机名来自前端而不是转发目标。
  */
 const FORWARDED_REQUEST_HEADERS = ['cookie', 'origin', 'referer'] as const
-
-/** 运行期读取后端地址：换后端只需改环境变量并重启进程，无需重建产物 */
-function backendBaseUrl(): string {
-  return (process.env.BACKEND_URL ?? DEFAULT_BACKEND_URL).replace(/\/+$/, '')
-}
 
 type RouteContext = { params: Promise<{ path: string[] }> }
 

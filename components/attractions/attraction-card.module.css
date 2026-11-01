@@ -1,0 +1,77 @@
+.card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-md);
+  background: var(--wc-card);
+  box-shadow: var(--wc-shadow);
+}
+
+.link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--wc-green);
+  outline-offset: -2px;
+}
+
+.cover {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: linear-gradient(135deg, #e9e0cf, #d8e4dd);
+}
+
+.coverPlaceholder {
+  display: block;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #e9e0cf, #d8e4dd);
+}
+
+.body {
+  padding: 14px 16px 18px;
+}
+
+.name {
+  font-size: clamp(15px, 1.2vw, 17px);
+  line-height: 1.3;
+}
+
+.meta {
+  margin-top: 4px;
+  color: var(--wc-muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.views {
+  margin-top: 6px;
+  color: var(--wc-green);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  padding: 2px 8px;
+  border: 1px solid var(--wc-line);
+  border-radius: 999px;
+  background: var(--wc-green-soft);
+  color: var(--wc-green-dark);
+  font-size: 11.5px;
+  font-weight: 600;
+}

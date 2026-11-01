@@ -10,10 +10,21 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   timeZone: 'Asia/Shanghai',
 })
 
+/** 核实时间只到月：`Checked Aug 2026` 这类文案不接受「某天」的精度。 */
+const monthFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'Asia/Shanghai',
+})
+
 export function formatCount(value: number): string {
   return countFormatter.format(value)
 }
 
 export function formatDate(iso: string): string {
   return dateFormatter.format(new Date(iso))
+}
+
+export function formatMonth(iso: string): string {
+  return monthFormatter.format(new Date(iso))
 }

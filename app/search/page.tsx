@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { SiteFooter } from '@/components/site/site-footer'
 import { SiteHeader } from '@/components/site/site-header'
+import { listAttractionsForSearch } from '@/lib/attractions/server'
 import { searchContent } from '@/lib/search/query'
 import styles from './search.module.css'
 
@@ -31,7 +32,11 @@ function firstValue(params: SearchParams, key: string): string {
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams
-  const outcome = searchContent(firstValue(params, 'q'))
+  const rawQuery = firstValue(params, 'q')
+  // 引导态不需要景点数据：只有真的要搜的时候才打后端，避免空查询也发一次请求。
+  // 取数失败时 `listAttractionsForSearch` 返回空数组，景点分组随之缺席。
+  const attractions = rawQuery.trim() === '' ? [] : await listAttractionsForSearch()
+  const outcome = searchContent(rawQuery, attractions)
   const asked = outcome.query !== ''
 
   return (
@@ -86,8 +91,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
                     <ul className={styles.list}>
                       {group.items.map((item) => (
-                        <li key={`${group.kind}-${item.id}`} className={styles.item}>
-                          <p className={styles.itemTitle}>{item.title}</p>
+                        <li key={item.key} className={styles.item}>
+                          <p className={styles.itemTitle}>
+                            {item.href ? <Link href={item.href}>{item.title}</Link> : item.title}
+                          </p>
                           <p className={styles.meta}>
                             {item.cityLabel} · {item.meta}
                           </p>

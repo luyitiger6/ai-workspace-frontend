@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { CitySlug } from '@/lib/home/types'
 import { useAiAssistant } from './ai-assistant'
 import styles from './feature-nav.module.css'
 
@@ -47,7 +48,7 @@ function SparkIcon() {
   )
 }
 
-const LINK_ENTRIES = [
+const linkEntries = (city: CitySlug) => [
   {
     key: 'community',
     href: '/community',
@@ -59,7 +60,8 @@ const LINK_ENTRIES = [
   },
   {
     key: 'attractions',
-    href: '/attractions',
+    // `all` 是页面语义而不是城市取值：此时不带参数，落到列表页默认的全部城市。
+    href: city === 'all' ? '/attractions' : `/attractions?city=${city}`,
     title: 'Attraction guides',
     description: 'Pick a place by city and season that will not disappoint.',
     action: 'Browse guides',
@@ -68,7 +70,7 @@ const LINK_ENTRIES = [
   },
 ]
 
-export function FeatureNav() {
+export function FeatureNav({ city }: { city: CitySlug }) {
   const { open } = useAiAssistant()
 
   return (
@@ -85,7 +87,7 @@ export function FeatureNav() {
         </div>
 
         <ul className={styles.grid} data-layout="grid">
-          {LINK_ENTRIES.map(({ key, href, title, description, action, Icon, tone }) => (
+          {linkEntries(city).map(({ key, href, title, description, action, Icon, tone }) => (
             <li key={key} className={`${styles.card} ${styles[tone]}`}>
               <Link className={styles.cardLink} href={href}>
                 <span className={styles.icon}>

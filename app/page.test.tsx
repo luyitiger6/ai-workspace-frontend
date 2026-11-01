@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { AiAssistantProvider } from '@/components/home/ai-assistant'
+import { attractionsApi } from '@/lib/attractions/attractions-api'
 import { mockRepository } from '@/lib/home/repository'
 import HomePage from './page'
 
@@ -32,8 +33,11 @@ afterEach(() => {
 })
 
 // 顶栏挂载会探测一次会话（GET /api/auth/me）；首页用例关心的是区块渲染，把它桩成访客态。
+// 热门景点已改走后端，这里把它桩成一页空数据：本文件不验证该区块的渲染细节，
+// 否则全局 fetch 桩会把它连带置为错误态，干扰「单区块失败不连带」的断言。
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 401 })))
+  vi.spyOn(attractionsApi, 'listHotAttractions').mockResolvedValue({ items: [], total: 0 })
 })
 
 describe('wanderchain 首页', () => {
@@ -134,7 +138,7 @@ describe('wanderchain 首页', () => {
   it('city 变化触发三个内容区块重新取数', async () => {
     const picksSpy = vi.spyOn(mockRepository, 'listEditorPicks')
     const postsSpy = vi.spyOn(mockRepository, 'listHotPosts')
-    const attractionsSpy = vi.spyOn(mockRepository, 'listHotAttractions')
+    const attractionsSpy = vi.spyOn(attractionsApi, 'listHotAttractions')
 
     const first = await HomePage({ searchParams: Promise.resolve({ city: 'all' }) })
     const { rerender } = render(

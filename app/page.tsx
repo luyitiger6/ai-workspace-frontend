@@ -46,7 +46,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
         <div className={`wc-container ${styles.sections}`}>
           <SectionBoundary title="Feature entrances">
-            <FeatureNav />
+            <FeatureNav city={city} />
           </SectionBoundary>
 
           <SectionBoundary title="City picker">

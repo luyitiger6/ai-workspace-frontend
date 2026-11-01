@@ -12,6 +12,7 @@
 }
 
 .card {
+  min-width: 0;
   overflow: hidden;
   border: 1px solid var(--wc-line);
   border-radius: var(--wc-radius-md);
@@ -19,11 +20,29 @@
   box-shadow: var(--wc-shadow);
 }
 
+.link {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--wc-green);
+  outline-offset: -2px;
+}
+
 .cover {
   width: 100%;
   height: auto;
   aspect-ratio: 1 / 1;
   object-fit: cover;
+  background: linear-gradient(135deg, #e9e0cf, #d8e4dd);
+}
+
+.coverPlaceholder {
+  display: block;
+  aspect-ratio: 1 / 1;
   background: linear-gradient(135deg, #e9e0cf, #d8e4dd);
 }
 

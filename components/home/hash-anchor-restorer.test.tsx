@@ -109,4 +109,46 @@ describe('锚点落位补偿', () => {
 
     expect(window.scrollTo).toHaveBeenCalledTimes(1)
   })
+
+  it('被文档尽头夹住后文档变长，仍继续追到新的落点', () => {
+    // 回归：页尾区块所需滚动位置超过文档尽头时，期望值恒等曾被当成「稳定」并收工，
+    // 随后异步内容把文档撑高，页面就永远停在旧尽头、也够不上「已滚到尽头」的例外。
+    const header = document.createElement('header')
+    const target = document.createElement('section')
+    target.id = 'hot-posts'
+    document.body.append(header, target)
+    header.getBoundingClientRect = () => rect(0, 68)
+
+    let scrollY = 0
+    let docHeight = 768 + 1000
+    Object.defineProperty(window, 'scrollY', { get: () => scrollY, configurable: true })
+    Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true })
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      get: () => docHeight,
+      configurable: true,
+    })
+    // 目标在文档中的偏移固定为 1215：视口内 top 随滚动变化，浏览器按文档尽头夹住滚动。
+    target.getBoundingClientRect = () => rect(1215 - scrollY, 618)
+    vi.spyOn(window, 'scrollTo').mockImplementation((options) => {
+      // 浏览器会把越界的目标位置夹到文档尽头，这里手工模拟同一行为。
+      const requested = options as ScrollToOptions | number
+      const top = typeof requested === 'number' ? requested : (requested.top ?? 0)
+      scrollY = Math.min(top, docHeight - 768)
+    })
+    window.history.replaceState(null, '', '/#hot-posts')
+
+    render(<HashAnchorRestorer />)
+
+    // 前几帧一直卡在 1000：修复前连跑 3 帧就会把「期望值没变」当稳定并收工。
+    frameCallback?.(0)
+    for (let frame = 0; frame < 3; frame += 1) {
+      frameCallback?.(0)
+    }
+    expect(scrollY).toBe(1000)
+
+    // 文档变长后必须继续追，而不是停在旧尽头。
+    docHeight = 768 + 1400
+    frameCallback?.(0)
+    expect(scrollY).toBe(1147)
+  })
 })

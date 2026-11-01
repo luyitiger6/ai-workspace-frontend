@@ -73,7 +73,8 @@ function watchAnchor(): () => void {
   let stopped = false
   let frame = 0
   let stableFrames = 0
-  let lastTop: number | null = null
+  /** 上次被文档尽头夹住时的文档高度：高度没变之前不重复下发同一次滚动。 */
+  let clampedAtHeight = -1
   let observer: ResizeObserver | null = null
   const deadline = performance.now() + MAX_SETTLE_MS
 
@@ -103,8 +104,14 @@ function watchAnchor(): () => void {
     const header = document.querySelector('header')
     const headerHeight = header === null ? 0 : header.getBoundingClientRect().height
     const top = anchorScrollTop(target!.getBoundingClientRect().top, window.scrollY, headerHeight)
-    if (Math.abs(window.scrollY - top) > TOLERANCE_PX) {
+    const docHeight = document.documentElement.scrollHeight
+    // 页尾区块所需的滚动位置可能超过文档尽头：此时浏览器会把滚动夹住，
+    // 记下当时的文档高度，等布局变长再追，避免对着同一个夹住的数值反复下发。
+    if (Math.abs(window.scrollY - top) > TOLERANCE_PX && docHeight !== clampedAtHeight) {
       window.scrollTo({ top, behavior: 'auto' })
+      if (Math.abs(window.scrollY - top) > TOLERANCE_PX) {
+        clampedAtHeight = docHeight
+      }
     }
     return top
   }
@@ -115,12 +122,13 @@ function watchAnchor(): () => void {
     }
 
     const desired = align()
-    if (lastTop !== null && Math.abs(desired - lastTop) <= TOLERANCE_PX) {
+    // 判据是「真的到位」，不是「期望位置没变」：区块被夹在文档尽头时期望值
+    // 本来就恒等，只盯着它会让校正提前收工，随后文档变长就永远差那一截。
+    if (Math.abs(window.scrollY - desired) <= TOLERANCE_PX) {
       stableFrames += 1
     } else {
       stableFrames = 0
     }
-    lastTop = desired
 
     if (stableFrames >= STABLE_FRAMES || performance.now() > deadline) {
       finish()

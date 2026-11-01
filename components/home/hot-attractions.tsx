@@ -1,17 +1,19 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 
-import { cityNameEn } from '@/lib/home/cities'
+import { attractionsApi } from '@/lib/attractions/attractions-api'
+import type { AttractionSummary } from '@/lib/attractions/types'
+import { cityNameEn, isCitySlug } from '@/lib/home/cities'
 import { formatCount } from '@/lib/home/format'
-import { mockRepository } from '@/lib/home/repository'
 import type { CitySlug } from '@/lib/home/types'
 import { EmptyState, SectionError, SectionLoading } from './section-state'
 import { useSectionData } from './use-section-data'
 import styles from './hot-attractions.module.css'
 
 export function HotAttractions({ city }: { city: CitySlug }) {
-  const state = useSectionData(() => mockRepository.listHotAttractions({ city }), [city])
+  const state = useSectionData(() => attractionsApi.listHotAttractions({ city }), [city])
 
   return (
     <section
@@ -42,29 +44,50 @@ export function HotAttractions({ city }: { city: CitySlug }) {
         {state.status === 'ready' && state.items.length > 0 ? (
           <ul className={styles.grid}>
             {state.items.map((item) => (
-              <li key={item.id} className={styles.card}>
-                <Image
-                  className={styles.cover}
-                  src={item.coverUrl}
-                  alt={`${item.nameEn} cover`}
-                  width={600}
-                  height={600}
-                  sizes="(max-width: 480px) calc(100vw - 64px), (max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className={styles.body}>
-                  <h3 className={styles.name}>{item.nameEn}</h3>
-                  <p className={styles.meta}>
-                    {cityNameEn(item.city)} · Rating {item.rating.toFixed(1)}
-                  </p>
-                  <p className={styles.views}>{formatCount(item.viewCount)} views</p>
-                </div>
-              </li>
+              <HotAttractionCard key={item.publicId} attraction={item} />
             ))}
           </ul>
         ) : null}
       </div>
     </section>
+  )
+}
+
+/** 卡片整卡可点，跳转 `/attractions/{publicId}`；缺失封面与缺失评分都有确定说法。 */
+function HotAttractionCard({ attraction }: { attraction: AttractionSummary }) {
+  const city = isCitySlug(attraction.city) ? cityNameEn(attraction.city) : attraction.city
+  const rating =
+    attraction.rating === null ? 'Not rated yet' : `Rating ${attraction.rating.toFixed(1)}`
+
+  return (
+    <li className={styles.card}>
+      <Link className={styles.link} href={`/attractions/${attraction.publicId}`}>
+        {attraction.coverUrl ? (
+          <Image
+            className={styles.cover}
+            src={attraction.coverUrl}
+            alt={`${attraction.nameEn} cover`}
+            width={600}
+            height={600}
+            sizes="(max-width: 480px) calc(100vw - 64px), (max-width: 720px) calc(50vw - 40px), (max-width: 1080px) calc(33.33vw - 38px), (min-width: 1160px) 204px, calc(20vw - 29px)"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <span
+            className={styles.coverPlaceholder}
+            role="img"
+            aria-label={`${attraction.nameEn} has no cover image`}
+          />
+        )}
+        <div className={styles.body}>
+          <h3 className={styles.name}>{attraction.nameEn}</h3>
+          <p className={styles.meta}>
+            {city} · {rating}
+          </p>
+          <p className={styles.views}>{formatCount(attraction.viewCount)} views</p>
+        </div>
+      </Link>
+    </li>
   )
 }

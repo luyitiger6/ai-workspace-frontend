@@ -96,6 +96,17 @@
   font-weight: 600;
 }
 
+/* 景点条目有详情页，标题渲成链接；其余类型暂无详情页，标题就只是文本。 */
+.itemTitle a {
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.itemTitle a:hover {
+  text-decoration: underline;
+}
+
 .meta {
   margin-top: 4px;
   color: var(--wc-muted);
