@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { safeReturnTo } from '@/lib/auth/return-to'
 import type { CommentResponse, PostInteractionStateResponse } from '@/lib/contracts/posts'
 import { describePostsError, PostsApiError, PostsNetworkError, postsApi } from '@/lib/posts/posts-api'
+import { isPostAuthor } from '@/lib/posts/post-author'
 import type { PostDetail } from '@/lib/posts/types'
 import { commentValidationError, normalizeCommentContent } from '@/lib/posts/comment-input'
 
@@ -404,6 +405,49 @@ export function usePostDetail(publicId: string) {
       if (data) update(active, { comments: { ...active.view.comments, data: { ...data, items: data.items.filter(item => item.publicId !== comment.publicId) }, stale: true } })
     })
   }, [mutate, update])
+  /**
+   * 删帖单独成路：`mutate` 写入成功后会重新读详情，帖子已删时必然 404，
+   * 会被误报成「写成功但刷新失败」。这里按服务端结果收口，失败不重试。
+   */
+  const deletePost = useCallback(async (): Promise<MutationResult> => {
+    const scope = scopeRef.current
+    const post = scope?.view.detail.data
+    if (!scope || scope.busy || !scope.accountPublicId || scope.view.sessionExpired || !post ||
+      !isPostAuthor(post.authorPublicId, scope.accountPublicId)) return 'ignored'
+    scope.busy = true
+    const controller = new AbortController()
+    scope.writeController = controller
+    for (const resource of ['detail', 'comments', 'personal'] as const) cancelRead(scope, resource)
+    update(scope, {
+      busy: true, loadingMore: false, mutationKind: 'delete',
+      mutation: { status: 'writing', message: 'Deleting the post…' },
+    })
+    try {
+      await postsApi.remove(scope.publicId, controller.signal)
+      if (!current(scope)) return 'ignored'
+      update(scope, { mutation: { status: 'success', message: 'Post deleted. Returning to all posts…' } })
+      return 'success'
+    } catch (cause) {
+      if (!current(scope)) return 'ignored'
+      update(scope, { mutation: { status: 'error', message: describePostsError(cause) } })
+      if (isUnauthenticated(cause)) sessionExpired(scope)
+      // 403 只提示，不改动页面上已显示的帖子；404 说明已被删除，落到既有的未找到界面。
+      else if (cause instanceof PostsApiError && cause.status === 404) {
+        update(scope, {
+          detail: { status: 'not-found', data: null, error: null, stale: false },
+          comments: emptyRead(), personal: emptyRead(),
+        })
+      }
+      return 'failed'
+    } finally {
+      if (current(scope)) {
+        scope.busy = false
+        scope.writeController = null
+        update(scope, { busy: false })
+      }
+    }
+  }, [current, sessionExpired, update])
+
   const recheckSession = useCallback(async () => {
     const owner = draftRef.current.ownerPublicId
     const account = await auth.refresh()
@@ -451,8 +495,10 @@ export function usePostDetail(publicId: string) {
   }, [readComments])
 
   const view = snapshot.key === key ? snapshot : initialView(key)
+  // 作者判定只决定「展示什么」，真正的权限仍由后端 403 裁定。
+  const canEdit = view.detail.data !== null && isPostAuthor(view.detail.data.authorPublicId, accountPublicId)
   return {
-    auth, view, draft, editContent, chooseReply, submitComment, deleteComment, recheckSession,
+    auth, view, canEdit, draft, editContent, chooseReply, submitComment, deleteComment, deletePost, recheckSession,
     toggleVote, toggleBookmark, retryDetail, retryPersonal, loadMoreComments, retryComments, reloadComments,
   }
 }

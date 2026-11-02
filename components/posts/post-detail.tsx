@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useRef, useState } from 'react'
 import { authHref } from '@/lib/auth/return-to'
 import { formatDate } from '@/lib/home/format'
 import type { PostSortBy } from '@/lib/posts/types'
@@ -14,9 +15,13 @@ import styles from './post-detail.module.css'
 
 export function PostDetail({ publicId, sortBy }: { publicId: string; sortBy?: PostSortBy }) {
   const detail = usePostDetail(publicId)
+  const router = useRouter()
   const { auth, view } = detail
   const [failedCover, setFailedCover] = useState<string | null>(null)
   const [loginRequested, setLoginRequested] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const deleteOpenerRef = useRef<HTMLButtonElement | null>(null)
+  const cancelDeleteRef = useRef<HTMLButtonElement>(null)
   const post = view.detail.data
   const backHref = sortBy ? `/posts?${new URLSearchParams({ sortBy })}` : '/posts'
   const next = `/posts/${publicId}`
@@ -31,6 +36,27 @@ export function PostDetail({ publicId, sortBy }: { publicId: string; sortBy?: Po
     })
   }
   const readOnly = post?.status === 'draft'
+  const openDeleteConfirm = (opener: HTMLButtonElement) => {
+    deleteOpenerRef.current = opener
+    setConfirmingDelete(true)
+    requestAnimationFrame(() => cancelDeleteRef.current?.focus())
+  }
+  const cancelDelete = () => {
+    if (view.busy) return
+    setConfirmingDelete(false)
+    requestAnimationFrame(() => {
+      if (deleteOpenerRef.current?.isConnected) deleteOpenerRef.current.focus()
+    })
+  }
+  const confirmDelete = async () => {
+    if (view.busy) return
+    const result = await detail.deletePost()
+    // 失败原因留在页面提示区；成功才离开详情，重回列表读服务端数据。
+    if (result === 'success') {
+      router.push('/posts')
+      router.refresh()
+    } else setConfirmingDelete(false)
+  }
   const focusComments = () => {
     const target = document.getElementById('comment-content') ?? document.getElementById('post-comments')
     target?.focus()
@@ -40,7 +66,10 @@ export function PostDetail({ publicId, sortBy }: { publicId: string; sortBy?: Po
   return (
     <main id="main-content" className={styles.main}>
       <div className={`wc-container ${styles.container}`}>
-        <Link href={backHref} className={styles.back}>← Back to all posts</Link>
+        <div className={styles.topBar}>
+          <Link href={backHref} className={styles.back}>← Back to all posts</Link>
+          <Link href="/posts/new" className={styles.write}>Write a post</Link>
+        </div>
         {loading ? <div className={styles.notice} role="status" aria-busy="true">Loading post…</div> : null}
         {!loading && view.detail.status === 'not-found' ? (
           <div className={styles.notice}>
@@ -72,7 +101,30 @@ export function PostDetail({ publicId, sortBy }: { publicId: string; sortBy?: Po
                 <p>{post.authorPublicId}</p>
               </details>
               <p className={styles.meta}>Created <time dateTime={post.createdAt}>{formatDate(post.createdAt)}</time></p>
+              {detail.canEdit ? (
+                <div className={styles.authorActions}>
+                  <Link href={`/posts/${publicId}/edit`} className="wc-button wc-button--ghost">Edit post</Link>
+                  <button
+                    type="button" className={`wc-button wc-button--ghost ${styles.danger}`} disabled={view.busy}
+                    onClick={event => openDeleteConfirm(event.currentTarget)}
+                  >
+                    Delete post
+                  </button>
+                </div>
+              ) : null}
             </header>
+            {detail.canEdit && confirmingDelete ? (
+              <div
+                className={styles.confirm} role="group" aria-labelledby="delete-post-prompt"
+                onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); cancelDelete() } }}
+              >
+                <p id="delete-post-prompt">Delete this post? Its comments will be gone with it, and this cannot be undone.</p>
+                <div className={styles.links}>
+                  <button type="button" className={`wc-button wc-button--ghost ${styles.danger}`} disabled={view.busy} onClick={() => void confirmDelete()}>Confirm delete</button>
+                  <button ref={cancelDeleteRef} type="button" className="wc-button wc-button--ghost" disabled={view.busy} onClick={cancelDelete}>Cancel</button>
+                </div>
+              </div>
+            ) : null}
             <div className={styles.cover}>
               {post.coverImage && failedCover !== post.coverImage ? (
                 <img src={post.coverImage} alt="" onError={() => setFailedCover(post.coverImage)} />

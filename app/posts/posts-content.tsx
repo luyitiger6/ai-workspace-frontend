@@ -1,6 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useAuth } from '@/components/auth/auth-provider'
 import { PostList } from '@/components/posts/post-list'
 import { SortTabs } from '@/components/posts/sort-tabs'
 import { useInfinitePosts } from '@/components/posts/use-infinite-posts'
@@ -19,6 +21,7 @@ function parseSortBy(raw: string | null): PostSortBy {
 
 export function PostsContent() {
   const searchParams = useSearchParams()
+  const auth = useAuth()
   const sortBy = parseSortBy(searchParams.get('sortBy'))
 
   const { state, loadMore, retry } = useInfinitePosts({ sortBy, load: postsApi.feed })
@@ -31,7 +34,13 @@ export function PostsContent() {
             <p className="wc-eyebrow">Community</p>
             <h1 className={styles.title}>All posts</h1>
           </div>
-          <SortTabs active={sortBy} />
+          <div className={styles.headActions}>
+            <div className={styles.writeEntry}>
+              <Link href="/posts/new" className="wc-button wc-button--primary">Write a post</Link>
+              {auth.status === 'guest' ? <p className={styles.note}>Log in first to publish.</p> : null}
+            </div>
+            <SortTabs active={sortBy} />
+          </div>
         </div>
 
         {state.status === 'loading' ? (

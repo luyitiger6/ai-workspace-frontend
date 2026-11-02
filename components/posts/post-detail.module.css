@@ -1,6 +1,11 @@
 .main { flex: 1; padding-block: 32px 48px; }
 .container { display: flex; flex-direction: column; gap: 24px; min-inline-size: 0; }
 .back { align-self: flex-start; color: var(--wc-green); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.topBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.write { color: var(--wc-green); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.authorActions { display: flex; flex-wrap: wrap; gap: 10px; }
+.confirm { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid var(--wc-line); border-radius: var(--wc-radius-md); background: var(--wc-card); }
+.danger { color: var(--wc-accent); }
 .post { display: flex; flex-direction: column; gap: 24px; max-inline-size: 820px; inline-size: 100%; min-inline-size: 0; align-self: center; }
 .head { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
 .title { font-size: clamp(28px, 4vw, 44px); overflow-wrap: anywhere; }
@@ -26,4 +31,5 @@
   .post { gap: 20px; }
   .content { font-size: 16px; }
   .notice { padding: 18px; }
+  .topBar { align-items: flex-start; }
 }

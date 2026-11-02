@@ -26,6 +26,25 @@
   font-size: clamp(28px, 4vw, 40px);
 }
 
+.headActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.writeEntry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.note {
+  color: var(--wc-muted);
+  font-size: 14px;
+}
+
 .loading,
 .error {
   padding: 48px 0;
@@ -44,5 +63,10 @@
   .head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .headActions {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

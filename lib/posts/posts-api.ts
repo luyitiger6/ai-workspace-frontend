@@ -4,10 +4,12 @@ import {
   type CommentCreateRequest,
   type CommentListResponse,
   type CommentResponse,
+  type PostCreateRequest,
   type PostFeedResponse,
   type PostInteractionStateResponse,
   type PostResponse,
   type PostSortBy as HttpSortBy,
+  type PostUpdateRequest,
   type VoteCreateRequest,
   type VoteResponse,
 } from '@/lib/contracts/posts'
@@ -90,6 +92,11 @@ function write(body: CommentCreateRequest | VoteCreateRequest, signal?: AbortSig
   return { method: 'POST', signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
 }
 
+/** 发布用 POST、编辑用 PUT，请求体形状一致；两者都由服务端重新校验。 */
+function writePost(method: 'POST' | 'PUT', body: PostCreateRequest | PostUpdateRequest, signal?: AbortSignal): RequestInit {
+  return { method, signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+}
+
 export const postsApi = {
   async feed(sortBy: PostSortBy, cursor: string | null = null, signal?: AbortSignal): Promise<PostPage> {
     const query = new URLSearchParams({ sortBy: SORT_MAP[sortBy], limit: '20' })
@@ -99,6 +106,17 @@ export const postsApi = {
   },
   async detail(publicId: string, signal?: AbortSignal): Promise<PostDetail> {
     return toPostDetail(await request<PostResponse>(POST_ENDPOINTS.detail(publicId), { signal }))
+  },
+  /** 建帖响应同样是完整详情，公开标识直接取自服务端，不在前端猜。 */
+  async create(input: PostCreateRequest, signal?: AbortSignal): Promise<PostDetail> {
+    return toPostDetail(await request<PostResponse>(POST_ENDPOINTS.create, writePost('POST', input, signal)))
+  },
+  async update(publicId: string, input: PostUpdateRequest, signal?: AbortSignal): Promise<PostDetail> {
+    return toPostDetail(await request<PostResponse>(POST_ENDPOINTS.update(publicId), writePost('PUT', input, signal)))
+  },
+  /** 删除成功是 204，`request()` 已按无响应体返回 void。 */
+  remove(publicId: string, signal?: AbortSignal): Promise<void> {
+    return request(POST_ENDPOINTS.delete(publicId), { method: 'DELETE', signal })
   },
   comments(publicId: string, cursor: string | null = null, signal?: AbortSignal): Promise<CommentListResponse> {
     const query = new URLSearchParams({ limit: '20' })
