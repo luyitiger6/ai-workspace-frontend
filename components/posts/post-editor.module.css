@@ -103,3 +103,58 @@
   gap: 12px;
   align-items: center;
 }
+
+/* 文件选择：隐藏原生控件，用label做可点按钮，键盘焦点留在input上。 */
+.upload {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.fileInput {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+}
+
+.fileLabel {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-sm);
+  background: var(--wc-card);
+  color: var(--wc-ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fileInput:focus-visible + .fileLabel {
+  outline: 2px solid var(--wc-accent);
+  outline-offset: 2px;
+}
+
+.fileInput:disabled + .fileLabel {
+  color: var(--wc-muted);
+  cursor: not-allowed;
+}
+
+/* 固定 16:9，避免图片加载前后页面高度抖动。 */
+.preview {
+  aspect-ratio: 16 / 9;
+  inline-size: 100%;
+  overflow: hidden;
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-md);
+  background: var(--wc-sand-deep);
+}
+
+.previewImage {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}

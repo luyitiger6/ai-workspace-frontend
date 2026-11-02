@@ -1,7 +1,13 @@
 'use client'
 
-import { useId, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
 import type { PostCreateRequest, PostStatus } from '@/lib/contracts/posts'
+import {
+  COVER_UPLOAD_ACCEPT,
+  describeCoverFileProblem,
+  describeMediaError,
+  uploadCoverImage,
+} from '@/lib/media/media-api'
 import {
   POST_INPUT_LIMITS,
   codePointLength,
@@ -41,10 +47,14 @@ export function PostEditor({ initial, labels, onSubmit }: PostEditorProps) {
   const [attempted, setAttempted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [previewBroken, setPreviewBroken] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
   const tagsRef = useRef<HTMLInputElement>(null)
   const coverRef = useRef<HTMLInputElement>(null)
+  const coverFileRef = useRef<HTMLInputElement>(null)
 
   const review = useMemo(() => reviewPostInput(values), [values])
   const tags = splitTags(values.tags)
@@ -55,6 +65,38 @@ export function PostEditor({ initial, labels, onSubmit }: PostEditorProps) {
     setValues(current => ({ ...current, ...patch }))
     setFailure(null)
     setAttempted(false)
+  }
+
+  // 地址一变就重新尝试加载预览：上一次的「这张图打不开」不该继承到新地址上。
+  useEffect(() => {
+    setPreviewBroken(false)
+  }, [values.coverImage])
+
+  /**
+   * 选完文件立即上传，成功后只回填地址。
+   *
+   * 失败时**不动** values.coverImage：用户可能已经手填了一个外部地址，
+   * 一次上传被拒不该把它抹掉（spec「上传失败保留原值」）。
+   */
+  const pickCover = async (file: File | undefined) => {
+    if (!file) return
+    setUploadError(null)
+    const problem = describeCoverFileProblem(file)
+    if (problem) {
+      setUploadError(problem)
+      return
+    }
+    setUploading(true)
+    try {
+      const stored = await uploadCoverImage(file)
+      change({ coverImage: stored.url })
+    } catch (cause) {
+      setUploadError(describeMediaError(cause))
+    } finally {
+      setUploading(false)
+      // 清空选择，让「重选同一个文件」也能触发 change。
+      if (coverFileRef.current) coverFileRef.current.value = ''
+    }
   }
 
   /** 标签与封面越界要「即时提示」，标题与正文等提交后再提示，避免边打字边报错。 */
@@ -79,6 +121,11 @@ export function PostEditor({ initial, labels, onSubmit }: PostEditorProps) {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (submitting) return
+    if (uploading) {
+      // 上传未完成时封面地址还是旧的，此时提交会把旧地址写成新封面。
+      setFailure('Wait for the image upload to finish before saving.')
+      return
+    }
     setAttempted(true)
     setFailure(null)
     const blocker = review.issues[0]
@@ -142,8 +189,36 @@ export function PostEditor({ initial, labels, onSubmit }: PostEditorProps) {
           aria-invalid={issueFor('coverImage') ? true : undefined} aria-describedby={describedBy('coverImage')}
           onChange={event => change({ coverImage: event.target.value })}
         />
-        <p id={`${baseId}-coverImage-help`} className={styles.meta}>Optional. Full http:// or https:// address; images are not uploaded here.</p>
+        <p id={`${baseId}-coverImage-help`} className={styles.meta}>
+          Optional. Paste a full http:// or https:// address, or choose a file below to upload it.
+        </p>
         {issueFor('coverImage') ? <p id={`${baseId}-coverImage-error`} className={styles.error} role="alert">{issueFor('coverImage')}</p> : null}
+
+        <div className={styles.upload}>
+          <input
+            ref={coverFileRef} id={`${baseId}-coverFile`} type="file" accept={COVER_UPLOAD_ACCEPT}
+            className={styles.fileInput} disabled={submitting || uploading}
+            aria-describedby={`${baseId}-coverFile-help`}
+            onChange={event => void pickCover(event.target.files?.[0])}
+          />
+          <label className={styles.fileLabel} htmlFor={`${baseId}-coverFile`}>
+            {uploading ? 'Uploading…' : 'Choose image'}
+          </label>
+        </div>
+        <p id={`${baseId}-coverFile-help`} className={styles.meta}>
+          JPEG, PNG or WebP, up to 5 MB. A successful upload fills the address above for you.
+        </p>
+        {uploadError ? <p className={styles.error} role="alert">{uploadError}</p> : null}
+
+        {values.coverImage && !previewBroken ? (
+          <div className={styles.preview}>
+            {/* 地址可能来自任意外部主机，next/image 需要预先登记域名，这里直接用原生 img。 */}
+            <img
+              className={styles.previewImage} src={values.coverImage} alt="Cover image preview"
+              onError={() => setPreviewBroken(true)}
+            />
+          </div>
+        ) : null}
       </div>
 
       <fieldset className={styles.status} disabled={submitting}>

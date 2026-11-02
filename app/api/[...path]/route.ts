@@ -9,6 +9,14 @@ import { backendBaseUrl } from '@/lib/backend-url'
  */
 const FORWARDED_REQUEST_HEADERS = ['cookie', 'origin', 'referer'] as const
 
+/**
+ * 按白名单回传的响应头。
+ *
+ * 只有缓存相关的两项：没有它们，封面图会退化成每次渲染都重新下载；
+ * content-length 不在名单里——流式转发下长度与实际字节不一致会造成截断。
+ */
+const FORWARDED_RESPONSE_HEADERS = ['cache-control', 'etag'] as const
+
 type RouteContext = { params: Promise<{ path: string[] }> }
 
 async function proxy(request: Request, context: RouteContext): Promise<Response> {
@@ -65,6 +73,14 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
   // 用 get() 取值会把多条 cookie 按逗号合并成一条，属性随之错位，浏览器要么存不下要么存错。
   for (const setCookie of upstream.headers.getSetCookie()) {
     responseHeaders.append('set-cookie', setCookie)
+  }
+  // 封面图这类不变资源的缓存头必须透传：图片经本代理出口，丢掉缓存头就等于每次渲染都重新下载。
+  // content-length 刻意不透传：流式转发下长度一旦与实际字节不一致反而会截断。
+  for (const name of FORWARDED_RESPONSE_HEADERS) {
+    const value = upstream.headers.get(name)
+    if (value) {
+      responseHeaders.set(name, value)
+    }
   }
 
   return new Response(upstream.body, {
