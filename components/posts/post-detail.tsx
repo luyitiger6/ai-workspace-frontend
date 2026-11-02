@@ -17,6 +17,9 @@ export function PostDetail({ publicId, sortBy }: { publicId: string; sortBy?: Po
   const detail = usePostDetail(publicId)
   const router = useRouter()
   const { auth, view } = detail
+  // 写入已提交但校准失败时，mutation 提示已说清「读失败、别重复提交」；
+  // 统计区再报一次读取错误会多出第二个 alert，且它的「请重试」与该指令相矛盾。
+  const mutationFailed = view.mutation.status === 'error' || view.mutation.status === 'uncertain'
   const [failedCover, setFailedCover] = useState<string | null>(null)
   const [loginRequested, setLoginRequested] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -134,7 +137,7 @@ export function PostDetail({ publicId, sortBy }: { publicId: string; sortBy?: Po
             <div className={styles.statistics}>
               <PostCardStats upVoteCount={post.upVoteCount} commentCount={post.commentCount} bookmarkCount={post.bookmarkCount} />
               {view.detail.stale ? <p className={styles.meta} role="status">Statistics pending refresh.</p> : null}
-              {view.detail.status === 'error' ? <p role="alert">{view.detail.error}</p> : null}
+              {view.detail.status === 'error' && !mutationFailed ? <p role="alert">{view.detail.error}</p> : null}
               {view.detail.stale ? <button type="button" className="wc-button wc-button--ghost" disabled={view.busy} onClick={() => void detail.retryDetail()}>Refresh server data</button> : null}
             </div>
             {!readOnly ? (
@@ -146,9 +149,9 @@ export function PostDetail({ publicId, sortBy }: { publicId: string; sortBy?: Po
               />
             ) : null}
             {view.mutation.message ? (
-              <div className={styles.notice} role={view.mutation.status === 'error' || view.mutation.status === 'uncertain' ? 'alert' : 'status'}>
+              <div className={styles.notice} role={mutationFailed ? 'alert' : 'status'}>
                 <p>{view.mutation.message}</p>
-                {view.mutation.status === 'error' || view.mutation.status === 'uncertain' ? (
+                {mutationFailed ? (
                   <button type="button" className="wc-button wc-button--ghost" disabled={view.busy} onClick={() => void detail.retryDetail()}>Check server data</button>
                 ) : null}
               </div>
