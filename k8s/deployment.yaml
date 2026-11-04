@@ -1,0 +1,51 @@
+# 前端单副本部署。镜像复用仓库既有的 frontend/Dockerfile（standalone 产物，非 root）。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wanderchain-frontend
+  labels:
+    app: wanderchain-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wanderchain-frontend
+  template:
+    metadata:
+      labels:
+        app: wanderchain-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: wanderchain-frontend:demo
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            # 必须指向集群内后端 Service。镜像里默认是 localhost:8989，在 Pod 里指向自己，必然连不上。
+            - name: BACKEND_URL
+              value: http://wanderchain-backend:8989
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: 0.0.0.0
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wanderchain-frontend
+  labels:
+    app: wanderchain-frontend
+spec:
+  selector:
+    app: wanderchain-frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

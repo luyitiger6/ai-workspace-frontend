@@ -1,0 +1,37 @@
+# 前端运行镜像（离线环境版）。与仓库根目录的 Dockerfile 不是替代关系：
+# 那个用 node:24-alpine 做三段式构建，在能拉镜像的环境里继续用它；
+# 这个只在当前环境使用——镜像加速器 403、公共代理 10~100 KB/s，node:24-alpine 拉不下来。
+#
+# 构建前置（本文件不做编译）：
+#   cd frontend && npm run build
+#   docker build -f Dockerfile.k8s -t wanderchain-frontend:demo .
+#
+# 运行时用 Alpine 自带的 nodejs（3.20 仓库为 20.15.1），满足 Next.js 16 的 Node 20.9+ 要求。
+# 产物来自宿主机的 Node 24 构建，standalone 输出是纯 JS，不依赖编译期的 Node 小版本。
+FROM alpine:3.20
+
+# 官方 CDN 在国内常年几十 KB/s，换阿里云源。
+RUN sed -i 's#dl-cdn.alpinelinux.org#mirrors.aliyun.com#g' /etc/apk/repositories \
+    && apk add --no-cache nodejs \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+# 运行期后端地址：Deployment 里用 env 覆盖成集群内的 Service DNS。
+ENV BACKEND_URL=http://localhost:8989
+
+RUN addgroup -S nodejs && adduser -S -G nodejs nextjs
+
+# Next.js 把 standalone 产物落在 .next/standalone/frontend/（多一层项目目录），
+# 应用根就是 /app/frontend：public 与 .next/static 必须跟着落到这一层，否则静态资源 404。
+COPY --chown=nodejs:nodejs .next/standalone ./
+COPY --chown=nodejs:nodejs .next/static ./frontend/.next/static
+COPY --chown=nodejs:nodejs public ./frontend/public
+
+WORKDIR /app/frontend
+
+USER nextjs
+EXPOSE 3000
+CMD ["node", "server.js"]
