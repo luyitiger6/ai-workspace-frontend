@@ -9,7 +9,8 @@ import styles from './post-list.module.css'
 
 export interface PostListProps {
   items: PostSummary[]
-  sortBy: PostSortBy
+  /** 用户页不传：卡片链接不带排序词，那份排序只属于广场的 URL。 */
+  sortBy?: PostSortBy
   authorCards?: ReadonlyMap<string, AuthorCardEntry>
   isLoadingMore: boolean
   hasMore: boolean

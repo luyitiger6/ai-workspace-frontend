@@ -3,9 +3,17 @@ import {
   type InterestListResponse,
   type ProfileCardListResponse,
   type ProfileResponse,
+  type PublicProfileResponse,
   type UpdateProfileRequest,
 } from '@/lib/contracts/profile'
-import { toProfile, toProfileCard, type Profile, type ProfileCard } from './types'
+import {
+  toProfile,
+  toProfileCard,
+  toPublicProfile,
+  type Profile,
+  type ProfileCard,
+  type PublicProfile,
+} from './types'
 
 /**
  * 资料数据的唯一调用点。
@@ -37,6 +45,11 @@ export function isUnauthenticated(cause: unknown): boolean {
   return cause instanceof ProfileApiError && cause.code === 'UNAUTHENTICATED'
 }
 
+/** 是否因为「不存在或已注销」被拒：公开用户页据此切到「用户不存在」态。 */
+export function isProfileNotFound(cause: unknown): boolean {
+  return cause instanceof ProfileApiError && cause.code === 'PROFILE_NOT_FOUND'
+}
+
 /** 错误码到界面文案的映射。未知码回落到状态码兜底，不臆造文案。 */
 export function describeProfileError(cause: unknown): string {
   if (cause instanceof ProfileNetworkError) return cause.message
@@ -45,6 +58,7 @@ export function describeProfileError(cause: unknown): string {
     UNAUTHENTICATED: 'Your session has expired. Log in to continue.',
     VALIDATION_FAILED: 'Some fields are not valid. Check them and try again.',
     CROSS_SITE_REJECTED: 'The request was rejected because its origin is not trusted.',
+    PROFILE_NOT_FOUND: 'This user does not exist or has left.',
   }
   return messages[cause.code] ?? `Request failed with status ${cause.status}. Please try again.`
 }
@@ -115,6 +129,10 @@ async function fetchProfileCardsReal(publicIds: string[], signal?: AbortSignal):
 async function fetchInterestsReal(signal?: AbortSignal): Promise<string[]> {
   const page = await request<InterestListResponse>(PROFILE_ENDPOINTS.interests, { signal })
   return page.items
+}
+
+async function fetchPublicProfileReal(publicId: string, signal?: AbortSignal): Promise<PublicProfile> {
+  return toPublicProfile(await request<PublicProfileResponse>(PROFILE_ENDPOINTS.publicProfile(publicId), { signal }))
 }
 
 // ---------------------------------------------------------------------------
@@ -188,4 +206,10 @@ export const profileApi = {
   update: USE_MOCK_PROFILE ? mockUpdateMyProfile : updateMyProfileReal,
   cards: USE_MOCK_PROFILE ? mockFetchProfileCards : fetchProfileCardsReal,
   interests: USE_MOCK_PROFILE ? mockFetchInterests : fetchInterestsReal,
+  /**
+   * 公开用户页恒走真接口，不跟 `USE_MOCK_PROFILE`（OQ1 决策）：
+   * 这个页面的读者是任意访客，Mock 会把假昵称与假简介当成某个作者的真资料展示。
+   * 失败态由调用方按 `PROFILE_NOT_FOUND` / 网络错误分别呈现。
+   */
+  publicProfile: fetchPublicProfileReal,
 }

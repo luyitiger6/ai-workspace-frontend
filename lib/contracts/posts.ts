@@ -131,6 +131,8 @@ export interface PostInteractionStateResponse {
 export const POST_ENDPOINTS = {
   create: '/api/posts',
   feed: '/api/posts',
+  /** 用户页列表：形状与 `feed` 相同，只是限定一个作者（design D5）。 */
+  byAuthor: (authorPublicId: string) => `/api/profiles/${authorPublicId}/posts`,
   detail: (publicId: string) => `/api/posts/${publicId}`,
   update: (publicId: string) => `/api/posts/${publicId}`,
   delete: (publicId: string) => `/api/posts/${publicId}`,

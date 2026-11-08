@@ -119,6 +119,10 @@
   overflow-wrap: anywhere;
 }
 
+.authorName:hover {
+  text-decoration: underline;
+}
+
 .authorGlyph {
   inline-size: 24px;
   block-size: 24px;

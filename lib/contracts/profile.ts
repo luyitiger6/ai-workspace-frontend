@@ -36,6 +36,20 @@ export interface ProfileCardResponse {
   avatarUrl: string
 }
 
+/**
+ * GET /api/profiles/{publicId} 的响应体：公开用户页的四项资料。
+ *
+ * 与 `ProfileResponse` 字段此刻相同，但两侧是两个 record：本人读将来加私有字段时，
+ * 公开读不应该跟着变（design D3）。前端也保持两份镜像，不把两者合并成一个类型。
+ */
+export interface PublicProfileResponse {
+  publicId: string
+  displayName: string
+  avatarUrl: string
+  bio: string
+  interests: string[]
+}
+
 /** GET /api/profiles 的响应体：不存在或已注销的标识不出现。 */
 export interface ProfileCardListResponse {
   items: ProfileCardResponse[]
@@ -52,4 +66,5 @@ export const PROFILE_ENDPOINTS = {
   update: '/api/profile',
   cards: '/api/profiles',
   interests: '/api/profile/interests',
+  publicProfile: (publicId: string) => `/api/profiles/${publicId}`,
 } as const

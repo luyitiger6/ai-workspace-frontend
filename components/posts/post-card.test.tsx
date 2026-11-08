@@ -94,6 +94,22 @@ describe('PostCard', () => {
     expect(screen.getByRole('link', { name: 'A sample post' })).toHaveAttribute('href', `/posts/${makePost().publicId}`)
   })
 
+  it('昵称指向用户页，href 只拼公开标识', () => {
+    render(<PostCard post={makePost()} authorCard={readyCard('Ada')} />)
+
+    expect(screen.getByRole('link', { name: 'Ada' })).toHaveAttribute('href', `/users/${readyCard().card!.publicId}`)
+  })
+
+  it('请求中与名片缺失都不生成用户页链接', () => {
+    const { rerender } = render(<PostCard post={makePost()} />)
+    // 骨架是 aria-hidden 的，无障碍树里只剩标题一个链接。
+    expect(screen.queryAllByRole('link')).toHaveLength(1)
+
+    rerender(<PostCard post={makePost()} authorCard={{ status: 'missing', card: null }} />)
+    expect(screen.queryByRole('link', { name: 'Author unavailable' })).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('link')).toHaveLength(1)
+  })
+
   it('没有摘要、姓名、城市、浏览数或假发布时间', () => {
     const polluted = { ...makePost(), id: 99, titleEn: 'Mock title', summaryEn: 'Fake summary',
       authorEn: 'Fake author', city: 'chengdu', viewCount: 12345, publishedAt: '2000-01-01' }

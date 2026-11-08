@@ -153,3 +153,45 @@ describe('真实帖子端点层', () => {
     await expect(postsApi.detail(ID)).rejects.toBeInstanceOf(PostsNetworkError)
   })
 })
+
+describe('用户页帖子列表', () => {
+  it('路径按作者拼接，不带 sortBy，形状与首页一致', async () => {
+    fetchMock.mockResolvedValue(json({ items: [summary], nextCursor: null }))
+
+    const page = await postsApi.byAuthor(summary.authorPublicId)
+
+    const [path] = fetchMock.mock.calls.at(-1) as [string, RequestInit]
+    expect(path.startsWith(`/api/profiles/${summary.authorPublicId}/posts`)).toBe(true)
+    const query = new URL(path, 'http://localhost').searchParams
+    expect(query.get('limit')).toBe('20')
+    expect(query.has('cursor')).toBe(false)
+    expect(query.has('sortBy')).toBe(false)
+    expect(page.items[0].publicId).toBe(ID)
+    expect(page.items[0]).not.toHaveProperty('updatedAt')
+    expect(page.hasMore).toBe(false)
+  })
+
+  it('游标原样透传，hasMore 只从游标推导，signal 不被吞掉', async () => {
+    const cursor = 'opaque+/=%中文'
+    const signal = new AbortController().signal
+    fetchMock.mockResolvedValue(json({ items: [], nextCursor: cursor }))
+
+    expect((await postsApi.byAuthor(summary.authorPublicId, cursor, signal)).hasMore).toBe(true)
+
+    const [path, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit]
+    expect(new URL(path, 'http://localhost').searchParams.get('cursor')).toBe(cursor)
+    expect(init.signal).toBe(signal)
+  })
+
+  it('错误码透传：未知作者 404 与非法游标 400 都不冒充成功', async () => {
+    fetchMock.mockResolvedValue(json({ code: 'PROFILE_NOT_FOUND', message: '用户不存在' }, 404))
+    await expect(postsApi.byAuthor('missing-author'))
+      .rejects.toMatchObject({ status: 404, code: 'PROFILE_NOT_FOUND' })
+
+    fetchMock.mockResolvedValue(json({ code: 'VALIDATION_FAILED', message: 'bad cursor' }, 400))
+    await expect(postsApi.byAuthor(summary.authorPublicId, 'broken'))
+      .rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' })
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+})

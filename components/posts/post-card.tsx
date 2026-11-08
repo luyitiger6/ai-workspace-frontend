@@ -56,7 +56,9 @@ function AuthorArea({ entry }: { entry?: AuthorCardEntry }) {
             {firstCharacter(card.displayName)}
           </span>
         )}
-        <span className={styles.authorName}>{card.displayName}</span>
+        <Link className={styles.authorName} href={`/users/${card.publicId}`}>
+          {card.displayName}
+        </Link>
       </div>
     )
   }

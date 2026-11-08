@@ -37,6 +37,7 @@ export function describePostsError(cause: unknown): string {
     UNAUTHENTICATED: 'Your session has expired. Log in to continue.',
     POST_FORBIDDEN: 'You cannot perform this action. The state may have changed.',
     POST_NOT_FOUND: 'The requested post or interaction is no longer available.',
+    PROFILE_NOT_FOUND: 'This user does not exist or has left.',
     VALIDATION_FAILED: 'The content or page cursor is not valid.',
     CROSS_SITE_REJECTED: 'The request was rejected because its origin is not trusted.',
   }
@@ -106,6 +107,17 @@ export const postsApi = {
   },
   async detail(publicId: string, signal?: AbortSignal): Promise<PostDetail> {
     return toPostDetail(await request<PostResponse>(POST_ENDPOINTS.detail(publicId), { signal }))
+  },
+  /**
+   * 用户页列表：形状与首页 feed 完全一致，只是限定一个作者。
+   *
+   * 不传 `sortBy`：后端固定按发布时刻倒序（design D5）。游标仍然不透明地原样回传。
+   */
+  async byAuthor(publicId: string, cursor: string | null = null, signal?: AbortSignal): Promise<PostPage> {
+    const query = new URLSearchParams({ limit: '20' })
+    if (cursor !== null) query.set('cursor', cursor)
+    const page = await request<PostFeedResponse>(`${POST_ENDPOINTS.byAuthor(publicId)}?${query}`, { signal })
+    return { items: page.items.map(toPostSummary), nextCursor: page.nextCursor, hasMore: page.nextCursor !== null }
   },
   /** 建帖响应同样是完整详情，公开标识直接取自服务端，不在前端猜。 */
   async create(input: PostCreateRequest, signal?: AbortSignal): Promise<PostDetail> {
