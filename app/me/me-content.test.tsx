@@ -132,7 +132,8 @@ describe('个人中心', () => {
     expect(await screen.findByLabelText('Display name')).toHaveValue('Editor Lan')
     expect(screen.getByLabelText('Image URL')).toHaveValue('https://cdn.example.com/me.png')
     expect(screen.getByLabelText('Bio')).toHaveValue('City walk enthusiast.')
-    expect(screen.getByRole('checkbox', { name: 'hiking' })).toBeChecked()
+    // 兴趣清单是资料就绪后的第二轮异步请求，必须等到 checkbox 出现再断言。
+    expect(await screen.findByRole('checkbox', { name: 'hiking' })).toBeChecked()
     expect(screen.getByRole('checkbox', { name: 'food' })).not.toBeChecked()
   })
 
