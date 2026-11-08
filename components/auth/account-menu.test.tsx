@@ -49,29 +49,33 @@ describe('账号入口', () => {
     vi.unstubAllGlobals()
   })
 
-  it('会话加载中先占位，不闪出登录入口', () => {
+  it('会话加载中先占位，不闪出登录入口，也不出现个人中心入口', () => {
     fetchMock.mockImplementation(() => new Promise<Response>(() => undefined))
 
     renderMenu()
 
     expect(screen.getByTestId('account-loading')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Log in / Sign up' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'My profile' })).not.toBeInTheDocument()
   })
 
-  it('访客看到登录入口', async () => {
+  it('访客看到登录入口，且不出现个人中心入口', async () => {
     stubMe({ code: 'UNAUTHENTICATED', message: '未认证' }, 401)
 
     renderMenu()
 
     expect(await screen.findByRole('link', { name: 'Log in / Sign up' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'My profile' })).not.toBeInTheDocument()
   })
 
-  it('已登录用户看到后端返回的 displayName', async () => {
+  it('已登录用户看到后端返回的 displayName 与 My profile 直链', async () => {
     stubMe(ME_BODY)
 
     renderMenu()
 
     expect(await screen.findByText('Editor Lan')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'My profile' })).toHaveAttribute('href', '/me')
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
   })
 
   it('不展示角色徽章：后端没有角色模型，界面也就不读它', async () => {
@@ -93,6 +97,7 @@ describe('账号入口', () => {
 
     expect(await screen.findByRole('link', { name: 'Log in / Sign up' })).toBeInTheDocument()
     expect(screen.queryByText('Editor Lan')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'My profile' })).not.toBeInTheDocument()
     expect(fetchMock.mock.calls.some(([url]) => String(url) === '/api/auth/logout')).toBe(true)
   })
 })

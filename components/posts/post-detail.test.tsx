@@ -27,6 +27,8 @@ function makeAuth(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
     register: vi.fn().mockResolvedValue(null),
     logout: vi.fn().mockResolvedValue(undefined),
     refresh: vi.fn().mockResolvedValue(null),
+    setDisplayName: vi.fn(),
+    expireSession: vi.fn(),
     logoutRevision: 0,
     ...overrides,
   }

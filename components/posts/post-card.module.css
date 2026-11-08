@@ -48,8 +48,7 @@
   text-decoration: underline;
 }
 
-.title a:focus-visible,
-.author summary:focus-visible {
+.title a:focus-visible {
   outline: 2px solid var(--wc-green);
   outline-offset: 4px;
 }
@@ -79,18 +78,57 @@
 }
 
 .author {
-  color: var(--wc-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12.5px;
+  min-inline-size: 0;
+}
+
+.authorAvatar {
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--wc-sand-deep);
+}
+
+.authorBar {
+  inline-size: 72px;
+  block-size: 12px;
+  border-radius: 999px;
+  background: var(--wc-sand-deep);
+}
+
+.authorInitial {
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 999px;
+  background: var(--wc-sand-deep);
+  color: var(--wc-ink-soft);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.authorName {
+  color: var(--wc-ink-soft);
   overflow-wrap: anywhere;
 }
 
-.author summary {
-  cursor: pointer;
+.authorGlyph {
+  inline-size: 24px;
+  block-size: 24px;
+  color: var(--wc-muted);
+  flex-shrink: 0;
 }
 
-.author p {
-  margin-top: 6px;
-  color: var(--wc-ink-soft);
+.authorUnavailable {
+  color: var(--wc-muted);
+  overflow-wrap: anywhere;
 }
 
 .meta {

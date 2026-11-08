@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { PostList } from '@/components/posts/post-list'
 import { SortTabs } from '@/components/posts/sort-tabs'
+import { useAuthorCards } from '@/components/posts/use-author-cards'
 import { useInfinitePosts } from '@/components/posts/use-infinite-posts'
 import { postsApi } from '@/lib/posts/posts-api'
 import type { PostSortBy } from '@/lib/posts/types'
@@ -25,6 +26,8 @@ export function PostsContent() {
   const sortBy = parseSortBy(searchParams.get('sortBy'))
 
   const { state, loadMore, retry } = useInfinitePosts({ sortBy, load: postsApi.feed })
+  const authorIds = state.status === 'ready' ? state.items.map((post) => post.authorPublicId) : []
+  const authorCards = useAuthorCards(authorIds)
 
   return (
     <main id="main-content" className={styles.main}>
@@ -62,6 +65,7 @@ export function PostsContent() {
           <PostList
             items={state.items}
             sortBy={sortBy}
+            authorCards={authorCards}
             isLoadingMore={state.isLoadingMore}
             hasMore={state.hasMore}
             loadMoreError={state.loadMoreError}

@@ -23,6 +23,10 @@ export function AccountMenu() {
     <div className={styles.user}>
       {/* 只展示后端契约里真实存在的字段：后端没有角色模型，也就不该有角色徽章。 */}
       <span className={styles.name}>{user.displayName}</span>
+      {/* 个人中心入口是登录态内的直接链接，1 次点击可达，不做下拉菜单。 */}
+      <Link className={styles.profileLink} href="/me">
+        My profile
+      </Link>
       <button type="button" className={styles.logout} onClick={() => void logout()}>
         Log out
       </button>

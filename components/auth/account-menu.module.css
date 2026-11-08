@@ -28,6 +28,22 @@
 
 .name {
   font-weight: 600;
+  /* 单行限宽 + 省略号：截断只在显示层，完整昵称始终在 /me 昵称字段可见。 */
+  max-inline-size: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileLink {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 32px;
+  color: var(--wc-ink-soft);
+}
+
+.profileLink:hover {
+  color: var(--wc-green);
 }
 
 .logout {
@@ -42,4 +58,10 @@
 .logout:hover {
   border-color: var(--wc-green);
   color: var(--wc-green);
+}
+
+@media (max-width: 760px) {
+  .name {
+    max-inline-size: 10ch;
+  }
 }
