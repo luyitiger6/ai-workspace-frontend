@@ -27,6 +27,10 @@ export interface AuthContextValue {
   register: (input: RegisterRequest) => Promise<MeResponse | null>
   logout: () => Promise<void>
   refresh: () => Promise<MeResponse | null>
+  /** 资料保存成功后同步顶栏昵称（同一新值），无需整页刷新。 */
+  setDisplayName: (displayName: string) => void
+  /** 已登录进入后判定会话失效，把页头一次性收回到游客态。 */
+  expireSession: () => void
   /** 主动登出的事件代次；与 /me 失败归为 guest 区分，供内存草稿清除。 */
   logoutRevision?: number
 }
@@ -112,9 +116,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  /** 只更新昵称，不动其它字段：资料保存的返回就是服务端认定值，顶栏同步同一新值。 */
+  const setDisplayName = useCallback((displayName: string) => {
+    setUser(current => (current ? { ...current, displayName } : current))
+  }, [])
+
+  /** 与 logout 不同：不发后端请求，只是把会话失效这一事实反映到页头。 */
+  const expireSession = useCallback(() => {
+    generation.current += 1
+    setLogoutRevision(value => value + 1)
+    setUser(null)
+    setStatus('guest')
+  }, [])
+
   const value = useMemo(
-    () => ({ status, user, login, register, logout, refresh, logoutRevision }),
-    [status, user, login, register, logout, refresh, logoutRevision],
+    () => ({ status, user, login, register, logout, refresh, setDisplayName, expireSession, logoutRevision }),
+    [status, user, login, register, logout, refresh, setDisplayName, expireSession, logoutRevision],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

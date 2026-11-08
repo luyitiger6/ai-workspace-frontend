@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { AuthorCardEntry } from '@/lib/profile/types'
 import type { PostSummary } from '@/lib/posts/types'
 import { PostCard } from './post-card'
 
@@ -19,19 +20,52 @@ function makePost(overrides: Partial<PostSummary> = {}): PostSummary {
   }
 }
 
+function readyCard(displayName = 'Ada'): AuthorCardEntry {
+  return {
+    status: 'ready',
+    card: { publicId: '01ARZ3NDEKTSV4RRFFQ69G5FAW', displayName, avatarUrl: '' },
+  }
+}
+
 describe('PostCard', () => {
-  it('渲染真实标题、接口顺序标签、Author ID、创建时间和统计', () => {
-    render(<PostCard post={makePost()} />)
+  it('渲染真实标题、接口顺序标签、作者昵称、创建时间和统计', () => {
+    render(<PostCard post={makePost()} authorCard={readyCard()} />)
 
     expect(screen.getByRole('heading', { name: 'A sample post' })).toBeInTheDocument()
     expect(within(screen.getByRole('list', { name: 'Post tags' })).getAllByRole('listitem').map((item) => item.textContent))
       .toEqual(['Walking', 'Old town'])
-    expect(screen.getByText('Author ID: 01ARZ3…5FAW')).toBeInTheDocument()
+    expect(screen.getByText('Ada')).toBeInTheDocument()
     expect(screen.getByText('Created', { exact: false })).toHaveTextContent('Created Oct 11')
     expect(document.querySelector('time')).toHaveAttribute('datetime', makePost().createdAt)
     expect(screen.getByText('56')).toBeInTheDocument()
     expect(screen.getByText('12')).toBeInTheDocument()
     expect(screen.getByText('8')).toBeInTheDocument()
+  })
+
+  it('作者区三态：请求中占位、已返回昵称、缺失文案', () => {
+    const { container, rerender } = render(<PostCard post={makePost()} />)
+    expect(container.querySelector('details')).toBeNull()
+    expect(screen.queryByText(/Author/)).not.toBeInTheDocument()
+
+    rerender(<PostCard post={makePost()} authorCard={readyCard('Miles')} />)
+    expect(screen.getByText('Miles')).toBeInTheDocument()
+
+    rerender(<PostCard post={makePost()} authorCard={{ status: 'missing', card: null }} />)
+    expect(screen.getByText('Author unavailable')).toBeInTheDocument()
+  })
+
+  it('任何状态下都不渲染 26 位对外标识', () => {
+    const { rerender } = render(<PostCard post={makePost()} />)
+    expect(screen.queryByText(/Author ID/)).not.toBeInTheDocument()
+    expect(screen.queryByText(makePost().authorPublicId)).not.toBeInTheDocument()
+
+    rerender(<PostCard post={makePost()} authorCard={readyCard()} />)
+    expect(screen.queryByText(/Author ID/)).not.toBeInTheDocument()
+    expect(screen.queryByText(makePost().authorPublicId)).not.toBeInTheDocument()
+
+    rerender(<PostCard post={makePost()} authorCard={{ status: 'missing', card: null }} />)
+    expect(screen.queryByText(/Author ID/)).not.toBeInTheDocument()
+    expect(screen.queryByText(makePost().authorPublicId)).not.toBeInTheDocument()
   })
 
   it('零互动时仍展示图标与 0', () => {
@@ -67,14 +101,6 @@ describe('PostCard', () => {
     for (const text of ['Mock title', 'Fake summary', 'Fake author', 'chengdu', '12,345', '2000', 'Published']) {
       expect(screen.queryByText(text, { exact: false })).not.toBeInTheDocument()
     }
-  })
-
-  it('使用原生 details/summary 保留完整可展开作者标识', () => {
-    const { container } = render(<PostCard post={makePost()} />)
-    const details = container.querySelector('details')!
-    expect(details).not.toHaveAttribute('open')
-    expect(details.querySelector('summary')).toHaveTextContent('Author ID: 01ARZ3…5FAW')
-    expect(details.querySelector('p')).toHaveTextContent(makePost().authorPublicId)
   })
 
   it('封面为空或加载失败后无破图，链接保持可用', () => {

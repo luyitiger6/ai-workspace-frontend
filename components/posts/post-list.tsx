@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { AuthorCardEntry } from '@/lib/profile/types'
 import type { PostSortBy, PostSummary } from '@/lib/posts/types'
 import { PostCard } from './post-card'
 import { PostCardSkeleton } from './post-card-skeleton'
@@ -9,6 +10,7 @@ import styles from './post-list.module.css'
 export interface PostListProps {
   items: PostSummary[]
   sortBy: PostSortBy
+  authorCards?: ReadonlyMap<string, AuthorCardEntry>
   isLoadingMore: boolean
   hasMore: boolean
   loadMoreError: boolean
@@ -19,6 +21,7 @@ export interface PostListProps {
 export function PostList({
   items,
   sortBy,
+  authorCards,
   isLoadingMore,
   hasMore,
   loadMoreError,
@@ -63,7 +66,7 @@ export function PostList({
       <ul className={styles.list} aria-label="Post feed">
         {items.map((post) => (
           <li key={post.publicId}>
-            <PostCard post={post} sortBy={sortBy} />
+            <PostCard post={post} sortBy={sortBy} authorCard={authorCards?.get(post.authorPublicId)} />
           </li>
         ))}
         {isLoadingMore
