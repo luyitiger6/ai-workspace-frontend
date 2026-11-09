@@ -1,0 +1,26 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--wc-ink-soft);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.link:hover {
+  color: var(--wc-green);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  border-radius: 999px;
+  background: var(--wc-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
