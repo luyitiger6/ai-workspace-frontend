@@ -3,11 +3,18 @@ import { backendBaseUrl } from '@/lib/backend-url'
 /**
  * 按白名单转发给后端的请求头。
  *
- * 这三个头缺任意一个，认证链路都会在端到端上静默失效：cookie 是令牌的唯一载体，
- * origin 与 referer 是后端来源校验的输入。白名单之外的头一律不转发——
- * host 尤其不能带过去，否则后端看到的请求主机名来自前端而不是转发目标。
+ * cookie 是令牌的唯一载体，origin 与 referer 是后端来源校验的输入，
+ * x-forwarded-for 是后端来源限流的输入。四者缺任意一个，认证或限流链路
+ * 都会在端到端上静默失效。
+ *
+ * x-forwarded-for 必须原样透传：后端的规则是「取最后一跳」，本代理若追加
+ * 自身地址，最后一跳就会变成前端 Pod，所有请求重新聚成一个来源桶。
+ * 上游没给这个头时不补值——编一个地址比如实报「未知来源」更糟。
+ *
+ * 白名单之外的头一律不转发——host 尤其不能带过去，否则后端看到的
+ * 请求主机名来自前端而不是转发目标。
  */
-const FORWARDED_REQUEST_HEADERS = ['cookie', 'origin', 'referer'] as const
+const FORWARDED_REQUEST_HEADERS = ['cookie', 'origin', 'referer', 'x-forwarded-for'] as const
 
 /**
  * 按白名单回传的响应头。

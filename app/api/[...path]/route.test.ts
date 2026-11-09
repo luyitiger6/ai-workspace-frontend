@@ -139,14 +139,52 @@ describe('API 代理', () => {
     )
 
     const forwarded = fetchMock.mock.calls[0][1].headers as Headers
-    // 后端只从 cookie 读令牌、只从 origin / referer 做来源校验，这三个头丢了认证就静默失效。
+    // 后端只从 cookie 读令牌、只从 origin / referer 做来源校验、只从 x-forwarded-for 取限流来源，
+    // 这四个头丢了任意一个，认证或限流链路就会在端到端上静默失效。
     expect(forwarded.get('cookie')).toBe('wc_session=header.payload.signature')
     expect(forwarded.get('origin')).toBe('http://localhost:3000')
     expect(forwarded.get('referer')).toBe('http://localhost:3000/login')
-    // 来源必须仍是浏览器直连的 origin：代理不得把客户端 IP 冒充成可信代理链的输入。
-    expect(forwarded.get('x-forwarded-for')).toBeNull()
+    expect(forwarded.get('x-forwarded-for')).toBe('203.0.113.9')
     expect(forwarded.get('x-custom')).toBeNull()
     expect(forwarded.has('host')).toBe(false)
+  })
+
+  it('客户端地址转发头原样透传：不追加代理自身地址', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true }))
+
+    await POST(
+      new Request('http://localhost:3000/api/posts', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '203.0.113.9, 198.51.100.7',
+        },
+        body: '{}',
+      }),
+      { params: Promise.resolve({ path: ['posts'] }) },
+    )
+
+    // 后端取「最后一跳」：代理若追加自身地址，最后一跳就变成前端 Pod，全站重聚成一个桶。
+    // 逐字相等同时排除了「追加」与「重排」两种改法。
+    const forwarded = fetchMock.mock.calls[0][1].headers as Headers
+    expect(forwarded.get('x-forwarded-for')).toBe('203.0.113.9, 198.51.100.7')
+  })
+
+  it('上游没有地址转发头时不伪造', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true }))
+
+    await POST(
+      new Request('http://localhost:3000/api/posts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      }),
+      { params: Promise.resolve({ path: ['posts'] }) },
+    )
+
+    // 缺失即缺失：由后端归入「未知来源」桶（独立额度），比编一个地址诚实。
+    const forwarded = fetchMock.mock.calls[0][1].headers as Headers
+    expect(forwarded.has('x-forwarded-for')).toBe(false)
   })
 
   it('上游多条 Set-Cookie 逐条回传，不被逗号合并成一条', async () => {
