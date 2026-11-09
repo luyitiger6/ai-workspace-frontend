@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AccountMenu } from '@/components/auth/account-menu'
 import { AiAssistantTrigger } from '@/components/home/ai-assistant'
+import { MessageBadge } from './message-badge'
 import styles from './site-header.module.css'
 
 const NAV_ITEMS = [
@@ -27,6 +28,7 @@ export function SiteHeader() {
 
         <div className={styles.actions}>
           <AiAssistantTrigger variant="header" />
+          <MessageBadge />
           <AccountMenu />
         </div>
       </div>
