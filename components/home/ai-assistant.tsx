@@ -201,12 +201,14 @@ export function AiAssistantTrigger({ variant }: { variant: 'header' | 'floating'
       type="button"
       className={styles.headerTrigger}
       onClick={open}
+      /* 窄屏下文字被收起，名称改由 aria-label 提供；文案包含可见文本，满足 label-in-name */
+      aria-label="Open the AI assistant"
       aria-haspopup="dialog"
       aria-expanded={isOpen}
       data-testid="ai-header"
     >
       <SparkIcon />
-      AI assistant
+      <span className={styles.headerTriggerText}>AI assistant</span>
     </button>
   )
 }
