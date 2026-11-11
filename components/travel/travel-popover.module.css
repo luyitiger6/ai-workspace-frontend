@@ -1,0 +1,44 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--wc-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--wc-ink-soft);
+  cursor: pointer;
+}
+
+.trigger:hover,
+.trigger[aria-expanded='true'] {
+  border-color: var(--wc-green);
+  color: var(--wc-green);
+}
+
+/* 面板挂在 header 里、绝对定位向右对齐触发器。
+   right: 0 只能对齐，感知不到溢出：触发器靠左时面板会整体顶出视口左边界，
+   所以横向纠正由 travel-popover.tsx 的 clampToViewport 测量后做，这里只管尺寸。 */
+.panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  width: min(296px, calc(100vw - 32px));
+  padding: 18px;
+  border: 1px solid var(--wc-line);
+  border-radius: var(--wc-radius-md);
+  background: var(--wc-card);
+  box-shadow: 0 24px 48px -28px rgba(10, 30, 24, 0.55);
+}
+
+.panel[hidden] {
+  display: none;
+}

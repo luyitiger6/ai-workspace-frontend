@@ -165,3 +165,18 @@
     display: none;
   }
 }
+
+/* 头部在 520px 以下已经没有横向余量：把文字收起，四个入口统一成 36px 图标，
+   名称改由按钮自带的 aria-label 提供（见 ai-assistant.tsx）。 */
+@media (max-width: 520px) {
+  .headerTrigger {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .headerTriggerText {
+    display: none;
+  }
+}

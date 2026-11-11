@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { AccountMenu } from '@/components/auth/account-menu'
 import { AiAssistantTrigger } from '@/components/home/ai-assistant'
+import { CurrencyTool } from '@/components/travel/currency-tool'
+import { WeatherTool } from '@/components/travel/weather-tool'
 import { MessageBadge } from './message-badge'
 import styles from './site-header.module.css'
 
@@ -27,6 +29,9 @@ export function SiteHeader() {
         </nav>
 
         <div className={styles.actions}>
+          {/* 两个旅行工具靠左：图标触发器比文字按钮短，窄屏下先给它们留位置（design D8） */}
+          <WeatherTool />
+          <CurrencyTool />
           <AiAssistantTrigger variant="header" />
           <MessageBadge />
           <AccountMenu />
