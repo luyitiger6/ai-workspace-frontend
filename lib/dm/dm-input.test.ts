@@ -35,10 +35,17 @@ describe('parsePeerPublicId', () => {
 })
 
 describe('stripWhitespace', () => {
-  it('只去首尾 U+0000–U+0020，与 Java strip 同覆盖范围', () => {
+  it('与 Java Character.isWhitespace 同集合：Unicode 空白被去除', () => {
     expect(stripWhitespace('  hello\n')).toBe('hello')
-    expect(stripWhitespace('\u0000hi\u0001')).toBe('hi')
+    expect(stripWhitespace('\u3000\u3000hi\u3000')).toBe('hi')
+    expect(stripWhitespace('\u2003hi\u205F')).toBe('hi')
+    expect(stripWhitespace('\u2028hi\u2029')).toBe('hi')
+  })
+
+  it('Java 不算空白的码点保留：控制字符、NBSP、窄空格不删', () => {
+    expect(stripWhitespace('\u0000hi\u0001')).toBe('\u0000hi\u0001')
     expect(stripWhitespace('\u00A0hi\u00A0')).toBe('\u00A0hi\u00A0')
+    expect(stripWhitespace('\u2007hi\u202F')).toBe('\u2007hi\u202F')
   })
 })
 
@@ -55,6 +62,11 @@ describe('describeMessageProblem', () => {
   it('空与纯空白返回同一条提示', () => {
     expect(describeMessageProblem('')).toBe('Write something before sending.')
     expect(describeMessageProblem(' \n\t\r')).toBe('Write something before sending.')
+  })
+
+  it('全角与 Unicode 空白组成的正文按纯空白拒绝', () => {
+    expect(describeMessageProblem('\u3000\u3000')).toBe('Write something before sending.')
+    expect(describeMessageProblem('\u2003')).toBe('Write something before sending.')
   })
 
   it('正常正文与首尾空白不拦截', () => {

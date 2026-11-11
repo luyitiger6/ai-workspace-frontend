@@ -9,9 +9,18 @@ export const MESSAGE_MAX_CHARS = 2000
 /** ULID：Crockford Base32 的 26 位大写（后端 `Ulid.generate` 的产出形状）。 */
 const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/
 
-/** 与 Java `String.strip()` 同覆盖范围：只去首尾 U+0000–U+0020。 */
+/**
+ * Java `Character.isWhitespace` 判定的空白码点集合——`String.strip()`/`isBlank()` 的基准：
+ * 含 U+0009–U+000D、U+001C–U+001F、U+0020、U+1680、U+2000–U+2006、U+2008–U+200A、
+ * U+2028、U+2029、U+205F、U+3000；不含 U+00A0、U+2007、U+202F。
+ */
+const JAVA_WHITESPACE_CLASS =
+  '[\\u0009-\\u000D\\u001C-\\u001F\\u0020\\u1680\\u2000-\\u2006\\u2008-\\u200A\\u2028\\u2029\\u205F\\u3000]'
+const STRIP_PATTERN = new RegExp(`^${JAVA_WHITESPACE_CLASS}+|${JAVA_WHITESPACE_CLASS}+$`, 'g')
+
+/** 与 Java `String.strip()` 一致：按 `Character.isWhitespace` 去首尾空白，全角空格同样在列。 */
 export function stripWhitespace(value: string): string {
-  return value.replace(/^[\u0000-\u0020]+|[\u0000-\u0020]+$/g, '')
+  return value.replace(STRIP_PATTERN, '')
 }
 
 /** 与 Java `String.codePointCount` 一致：代理对按一个字符计。 */
