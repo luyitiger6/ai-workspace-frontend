@@ -61,7 +61,9 @@
 }
 
 @media (max-width: 760px) {
+  /* 头部在窄屏换行后，右侧只剩约 343px：昵称、个人中心与退出同时排不下
+     （375px 下溢出 37px）。昵称让位，完整昵称在 /me 昵称字段可见。 */
   .name {
-    max-inline-size: 10ch;
+    display: none;
   }
 }
